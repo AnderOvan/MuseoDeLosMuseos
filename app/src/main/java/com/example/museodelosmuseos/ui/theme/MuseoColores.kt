@@ -1,5 +1,5 @@
 package com.example.museodelosmuseos.ui.theme
-
+// Esta Clase será utilizada para diseño y atajos para las demás clases que la requieran
 import androidx.compose.ui.graphics.Color
 
 val AzulOscuro = Color(0xFF0B2545)

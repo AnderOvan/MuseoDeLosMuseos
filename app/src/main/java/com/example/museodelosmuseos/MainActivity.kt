@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.screens.BienvenidaScreen
+import com.example.museodelosmuseos.ui.screens.LoginScreen
+import com.example.museodelosmuseos.ui.screens.RegistroScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,7 +29,21 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable(Rutas.LOGIN) {
-                    Text("Pantalla de login (pendiente)")
+                    LoginScreen(
+                        onIniciarSesion = { navController.navigate(Rutas.DASHBOARD) },
+                        onRegistro = { navController.navigate(Rutas.REGISTRO) },
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+                composable(Rutas.REGISTRO) {
+                    RegistroScreen(
+                        onRegistrar = { navController.popBackStack() },
+                        onIrALogin = { navController.popBackStack() },
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+                composable(Rutas.DASHBOARD) {
+                    Text("Dashboard (pendiente)")
                 }
             }
         }
