@@ -62,4 +62,12 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Cámara (CameraX) y lector QR (ML Kit)
+    implementation(libs.androidx.camera.core)
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.barcode)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 }

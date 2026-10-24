@@ -18,6 +18,19 @@ import com.example.museodelosmuseos.ui.screens.LoginScreen
 import com.example.museodelosmuseos.ui.screens.RegistroScreen
 import com.example.museodelosmuseos.viewmodel.AuthViewModel
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import com.example.museodelosmuseos.ui.screens.DetalleMuseoScreen
+import com.example.museodelosmuseos.ui.screens.DetalleProductoScreen
+import com.example.museodelosmuseos.ui.screens.EscanerScreen
+import com.example.museodelosmuseos.util.TipoContenidoQr
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,7 +95,49 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable(Rutas.DASHBOARD) {
-                    Text("Dashboard (pendiente)")
+                    // Dashboard provisorio: solo un acceso al escáner
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Dashboard (pendiente)")
+                        Button(onClick = { navController.navigate(Rutas.ESCANER_QR) }) {
+                            Text("Escanear código QR")
+                        }
+                    }
+                }
+
+                composable(Rutas.ESCANER_QR) {
+                    EscanerScreen(
+                        onVerDetalle = { qr ->
+                            when (qr.tipo) {
+                                TipoContenidoQr.MUSEO ->
+                                    navController.navigate("${Rutas.DETALLE_MUSEO}/${qr.codigo}")
+                                TipoContenidoQr.PRODUCTO, TipoContenidoQr.PUBLICACION ->
+                                    navController.navigate("${Rutas.DETALLE_PRODUCTO}/${qr.tipo.name}/${qr.codigo}")
+                                TipoContenidoQr.DESCONOCIDO -> Unit
+                            }
+                        },
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->
+                    DetalleProductoScreen(
+                        codigo = entrada.arguments?.getString("codigo").orEmpty(),
+                        tipo = TipoContenidoQr.valueOf(
+                            entrada.arguments?.getString("tipo") ?: TipoContenidoQr.PRODUCTO.name
+                        ),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                composable("${Rutas.DETALLE_MUSEO}/{codigo}") { entrada ->
+                    DetalleMuseoScreen(
+                        codigo = entrada.arguments?.getString("codigo").orEmpty(),
+                        onVolver = { navController.popBackStack() }
+                    )
                 }
             }
         }
