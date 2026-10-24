@@ -43,7 +43,8 @@ private val coloresAvatar = listOf(
 fun RegistroScreen(
     onRegistrar: (Usuario) -> Unit,
     onIrALogin: () -> Unit,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    errorExterno: String? = null
 ) {
     var nombre by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
@@ -87,6 +88,10 @@ fun RegistroScreen(
             color = AzulOscuro.copy(alpha = 0.7f)
         )
         Spacer(Modifier.height(24.dp))
+        errorExterno?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(8.dp))
+        }
 
         OutlinedTextField(
             value = nombre,

@@ -1,13 +1,13 @@
-package cl.duoc.museodelosmuseos.repository
+package com.example.museodelosmuseos.repository
 
 import android.content.Context
-import cl.duoc.museodelosmuseos.model.FavoritoEntity
-import cl.duoc.museodelosmuseos.model.LecturaQrEntity
-import cl.duoc.museodelosmuseos.model.ProductoCacheEntity
-import cl.duoc.museodelosmuseos.model.UsuarioEntity
-import cl.duoc.museodelosmuseos.repository.local.AppDatabase
-import cl.duoc.museodelosmuseos.repository.local.Cifrado
-import cl.duoc.museodelosmuseos.repository.local.SessionManager
+import com.example.museodelosmuseos.model.FavoritoEntity
+import com.example.museodelosmuseos.model.LecturaQrEntity
+import com.example.museodelosmuseos.model.ProductoCacheEntity
+import com.example.museodelosmuseos.model.UsuarioEntity
+import com.example.museodelosmuseos.repository.local.AppDatabase
+import com.example.museodelosmuseos.repository.local.Cifrado
+import com.example.museodelosmuseos.repository.local.SessionManager
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow

@@ -1,14 +1,14 @@
-package cl.duoc.museodelosmuseos.repository.local
+package com.example.museodelosmuseos.repository.local
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
-import cl.duoc.museodelosmuseos.model.FavoritoEntity
-import cl.duoc.museodelosmuseos.model.LecturaQrEntity
-import cl.duoc.museodelosmuseos.model.ProductoCacheEntity
-import cl.duoc.museodelosmuseos.model.UsuarioEntity
+import com.example.museodelosmuseos.model.FavoritoEntity
+import com.example.museodelosmuseos.model.LecturaQrEntity
+import com.example.museodelosmuseos.model.ProductoCacheEntity
+import com.example.museodelosmuseos.model.UsuarioEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

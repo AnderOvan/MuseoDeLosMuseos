@@ -1,4 +1,4 @@
-package cl.duoc.museodelosmuseos.model
+package com.example.museodelosmuseos.model
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

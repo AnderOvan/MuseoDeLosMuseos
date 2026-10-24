@@ -26,9 +26,10 @@ import com.example.museodelosmuseos.ui.theme.*
 
 @Composable
 fun LoginScreen(
-    onIniciarSesion: (Rol) -> Unit,
+    onIniciarSesion: (correo: String, contrasena: String, rol: Rol) -> Unit,
     onRegistro: () -> Unit,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    errorExterno: String? = null
 ) {
     var rolSeleccionado by remember { mutableStateOf(Rol.CLIENTE) }
     var correo by remember { mutableStateOf("") }
@@ -101,7 +102,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        error?.let {
+        (error ?: errorExterno)?.let {
             Spacer(Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
         }
@@ -115,7 +116,7 @@ fun LoginScreen(
                 } else if (contrasena.length < 6) {
                     error = "La contraseña debe tener al menos 6 caracteres"
                 } else {
-                    onIniciarSesion(rolSeleccionado)
+                    onIniciarSesion(correo.trim(), contrasena, rolSeleccionado)
                 }
             },
             modifier = Modifier.fillMaxWidth(),
@@ -180,5 +181,5 @@ private fun RolOpcion(rol: Rol, seleccionado: Boolean, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-    LoginScreen(onIniciarSesion = {}, onRegistro = {}, onVolver = {})
+    LoginScreen(onIniciarSesion = { _, _, _ -> }, onRegistro = {}, onVolver = {})
 }

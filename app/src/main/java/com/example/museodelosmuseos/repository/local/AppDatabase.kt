@@ -1,13 +1,13 @@
-package cl.duoc.museodelosmuseos.repository.local
+package com.example.museodelosmuseos.repository.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import cl.duoc.museodelosmuseos.model.FavoritoEntity
-import cl.duoc.museodelosmuseos.model.LecturaQrEntity
-import cl.duoc.museodelosmuseos.model.ProductoCacheEntity
-import cl.duoc.museodelosmuseos.model.UsuarioEntity
+import com.example.museodelosmuseos.model.FavoritoEntity
+import com.example.museodelosmuseos.model.LecturaQrEntity
+import com.example.museodelosmuseos.model.ProductoCacheEntity
+import com.example.museodelosmuseos.model.UsuarioEntity
 
 @Database(
     entities = [

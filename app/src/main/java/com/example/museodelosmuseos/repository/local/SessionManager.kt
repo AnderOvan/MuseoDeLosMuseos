@@ -1,4 +1,4 @@
-package cl.duoc.museodelosmuseos.repository.local
+package com.example.museodelosmuseos.repository.local
 
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
