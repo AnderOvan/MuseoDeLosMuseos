@@ -5,6 +5,7 @@ data class Usuario(
     val rut: String,
     val correo: String,
     val contrasena: String,
+    val despacho: String = "",
     val rol: Rol = Rol.CLIENTE,
     val avatar: Int = 0
 )

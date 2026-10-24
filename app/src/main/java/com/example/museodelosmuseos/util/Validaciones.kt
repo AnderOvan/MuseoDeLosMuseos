@@ -46,3 +46,6 @@ fun formatearRut(rut: String): String {
     val conPuntos = cuerpo.reversed().chunked(3).joinToString(".").reversed()
     return "$conPuntos-$dv"
 }
+
+fun validarDespacho(despacho: String): String? =
+    if (despacho.trim().length < 5) "Ingresa un dirección de despacho válida" else null
