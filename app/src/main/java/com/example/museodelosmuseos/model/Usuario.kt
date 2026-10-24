@@ -1,4 +1,4 @@
-package com.example.museodelosmuseos.modelo
+package com.example.museodelosmuseos.model
 
 data class Usuario(
     val nombre: String,

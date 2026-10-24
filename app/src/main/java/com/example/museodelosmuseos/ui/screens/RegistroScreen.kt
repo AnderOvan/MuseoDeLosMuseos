@@ -24,7 +24,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.museodelosmuseos.modelo.Usuario
+import com.example.museodelosmuseos.model.Usuario
 import com.example.museodelosmuseos.ui.theme.*
 import com.example.museodelosmuseos.util.validarContrasena
 import com.example.museodelosmuseos.util.validarCorreo
