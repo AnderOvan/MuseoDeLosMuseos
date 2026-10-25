@@ -3,7 +3,6 @@ package com.example.museodelosmuseos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -11,25 +10,18 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.museodelosmuseos.repository.LocalRepository
-//import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.screens.BienvenidaScreen
-import com.example.museodelosmuseos.ui.screens.LoginScreen
-import com.example.museodelosmuseos.ui.screens.RegistroScreen
-import com.example.museodelosmuseos.viewmodel.AuthViewModel
-
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.example.museodelosmuseos.ui.screens.DetalleMuseoScreen
 import com.example.museodelosmuseos.ui.screens.DetalleProductoScreen
 import com.example.museodelosmuseos.ui.screens.EscanerScreen
+import com.example.museodelosmuseos.ui.screens.HomeScreen
+import com.example.museodelosmuseos.ui.screens.LoginScreen
+import com.example.museodelosmuseos.ui.screens.PantallaPendiente
+import com.example.museodelosmuseos.ui.screens.RegistroScreen
 import com.example.museodelosmuseos.util.TipoContenidoQr
+import com.example.museodelosmuseos.viewmodel.AuthViewModel
+import com.example.museodelosmuseos.viewmodel.HomeViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 viewModel(factory = AuthViewModel.factory(localRepository))
             val errorAuth by authViewModel.error.collectAsState()
 
-            // Entra al dashboard y borra el historial,
+            // Entra al inicio y borra el historial,
             // así el botón "atrás" no vuelve al login
             val irAlDashboard = {
                 navController.navigate(Rutas.DASHBOARD) {
@@ -56,6 +48,7 @@ class MainActivity : ComponentActivity() {
                 navController = navController,
                 startDestination = Rutas.BIENVENIDA
             ) {
+                // ---------- Acceso ----------
                 composable(Rutas.BIENVENIDA) {
                     BienvenidaScreen(
                         onComenzar = { navController.navigate(Rutas.LOGIN) },
@@ -94,20 +87,20 @@ class MainActivity : ComponentActivity() {
                         errorExterno = errorAuth
                     )
                 }
+
+                // ---------- Pantalla principal ----------
                 composable(Rutas.DASHBOARD) {
-                    // Dashboard provisorio: solo un acceso al escáner
-                    Column(
-                        modifier = Modifier.fillMaxSize().padding(24.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("Dashboard (pendiente)")
-                        Button(onClick = { navController.navigate(Rutas.ESCANER_QR) }) {
-                            Text("Escanear código QR")
-                        }
-                    }
+                    val homeViewModel: HomeViewModel =
+                        viewModel(factory = HomeViewModel.factory(localRepository))
+                    val nombre by homeViewModel.nombreUsuario.collectAsState()
+
+                    HomeScreen(
+                        nombreUsuario = nombre,
+                        onNavegar = { ruta -> navController.navigate(ruta) }
+                    )
                 }
 
+                // ---------- Escáner QR y detalles ----------
                 composable(Rutas.ESCANER_QR) {
                     EscanerScreen(
                         onVerDetalle = { qr ->
@@ -122,7 +115,6 @@ class MainActivity : ComponentActivity() {
                         onVolver = { navController.popBackStack() }
                     )
                 }
-
                 composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->
                     DetalleProductoScreen(
                         codigo = entrada.arguments?.getString("codigo").orEmpty(),
@@ -132,12 +124,25 @@ class MainActivity : ComponentActivity() {
                         onVolver = { navController.popBackStack() }
                     )
                 }
-
                 composable("${Rutas.DETALLE_MUSEO}/{codigo}") { entrada ->
                     DetalleMuseoScreen(
                         codigo = entrada.arguments?.getString("codigo").orEmpty(),
                         onVolver = { navController.popBackStack() }
                     )
+                }
+
+                // ---------- Secciones aún no integradas (pantalla temporal) ----------
+                listOf(
+                    Rutas.MAPA to "Mapa de museos",
+                    Rutas.CATALOGO to "Catálogo",
+                    Rutas.FAVORITOS to "Favoritos",
+                    Rutas.CARRITO to "Carrito",
+                    Rutas.NOTIFICACIONES to "Notificaciones",
+                    Rutas.PERFIL to "Perfil"
+                ).forEach { (ruta, titulo) ->
+                    composable(ruta) {
+                        PantallaPendiente(titulo = titulo, onVolver = { navController.popBackStack() })
+                    }
                 }
             }
         }
