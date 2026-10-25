@@ -3,25 +3,65 @@ package com.example.museodelosmuseos
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.Text
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.screens.BienvenidaScreen
+import com.example.museodelosmuseos.ui.screens.DashboardScreen
 import com.example.museodelosmuseos.ui.screens.LoginScreen
+import com.example.museodelosmuseos.ui.screens.PantallaPendiente
 import com.example.museodelosmuseos.ui.screens.RegistroScreen
+import com.example.museodelosmuseos.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
+
 
 class MainActivity : ComponentActivity() {
+
+    private val repo by lazy { LocalRepository.crear(applicationContext) }
+    private val authViewModel: AuthViewModel by viewModels { AuthViewModel.factory(repo) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Crea las cuentas de Administrador e Investigador si todavía no existen
+        lifecycleScope.launch { repo.crearCuentasDePrueba() }
+
         setContent {
             val navController = rememberNavController()
+            val errorAuth by authViewModel.error.collectAsState()
+            val usuarioActivo by authViewModel.usuarioActivo.collectAsState()
+
+            // Entra al inicio y borra el historial: "atrás" no vuelve al login
+            val irAlDashboard: () -> Unit = {
+                navController.navigate(Rutas.DASHBOARD) {
+                    popUpTo(Rutas.BIENVENIDA) { inclusive = true }
+                }
+            }
+
+            // Barra inferior y accesos rápidos: "atrás" siempre vuelve a Inicio
+            // y no se apilan pantallas repetidas
+            val navegarSeccion: (String) -> Unit = { ruta ->
+                if (ruta == Rutas.DASHBOARD) {
+                    navController.popBackStack(Rutas.DASHBOARD, inclusive = false)
+                } else {
+                    navController.navigate(ruta) {
+                        popUpTo(Rutas.DASHBOARD)
+                        launchSingleTop = true
+                    }
+                }
+            }
 
             NavHost(
                 navController = navController,
                 startDestination = Rutas.BIENVENIDA
             ) {
+                // ---------- Acceso ----------
                 composable(Rutas.BIENVENIDA) {
                     BienvenidaScreen(
                         onComenzar = { navController.navigate(Rutas.LOGIN) },
@@ -30,20 +70,77 @@ class MainActivity : ComponentActivity() {
                 }
                 composable(Rutas.LOGIN) {
                     LoginScreen(
-                        onIniciarSesion = { navController.navigate(Rutas.DASHBOARD) },
-                        onRegistro = { navController.navigate(Rutas.REGISTRO) },
-                        onVolver = { navController.popBackStack() }
+                        onIniciarSesion = { correo, contrasena, rol ->
+                            authViewModel.iniciarSesion(correo, contrasena, rol, irAlDashboard)
+                        },
+                        onRegistro = {
+                            authViewModel.limpiarError()
+                            navController.navigate(Rutas.REGISTRO)
+                        },
+                        onVolver = {
+                            authViewModel.limpiarError()
+                            navController.popBackStack()
+                        },
+                        errorExterno = errorAuth
                     )
                 }
                 composable(Rutas.REGISTRO) {
                     RegistroScreen(
-                        onRegistrar = { navController.popBackStack() },
-                        onIrALogin = { navController.popBackStack() },
-                        onVolver = { navController.popBackStack() }
+                        onRegistrar = { usuario ->
+                            authViewModel.registrar(usuario, irAlDashboard)
+                        },
+                        onIrALogin = {
+                            authViewModel.limpiarError()
+                            navController.popBackStack()
+                        },
+                        onVolver = {
+                            authViewModel.limpiarError()
+                            navController.popBackStack()
+                        },
+                        errorExterno = errorAuth
                     )
                 }
+
+                // ---------- Pantalla 4: Dashboard ----------
                 composable(Rutas.DASHBOARD) {
-                    Text("Dashboard (pendiente)")
+                    usuarioActivo?.let { usuario ->
+                        DashboardScreen(
+                            nombre = usuario.nombre,
+                            rol = usuario.rol,
+                            avatar = usuario.avatar,
+                            onNavegar = navegarSeccion
+                        )
+                    }
+                }
+
+                // ---------- Secciones aún no integradas ----------
+                // Cuando integren las pantallas de tu compañero, reemplaza la
+                // pantalla temporal de cada ruta por la real (Mapa, Escáner, Catálogo...)
+                listOf(
+                    Rutas.MAPA to "Mapa de museos",
+                    Rutas.ESCANER_QR to "Escáner QR",
+                    Rutas.CATALOGO to "Catálogo",
+                    Rutas.FAVORITOS to "Favoritos",
+                    Rutas.HISTORIAL to "Historial de solicitudes",
+                    Rutas.NOTIFICACIONES to "Notificaciones"
+                ).forEach { (ruta, titulo) ->
+                    composable(ruta) {
+                        PantallaPendiente(titulo, onVolver = { navController.popBackStack() })
+                    }
+                }
+
+                // Perfil temporal: incluye "Cerrar sesión" para probar los tres roles
+                composable(Rutas.PERFIL) {
+                    PantallaPendiente(
+                        titulo = "Perfil",
+                        onVolver = { navController.popBackStack() },
+                        onCerrarSesion = {
+                            authViewModel.cerrarSesion()
+                            navController.navigate(Rutas.LOGIN) {
+                                popUpTo(Rutas.DASHBOARD) { inclusive = true }
+                            }
+                        }
+                    )
                 }
             }
         }

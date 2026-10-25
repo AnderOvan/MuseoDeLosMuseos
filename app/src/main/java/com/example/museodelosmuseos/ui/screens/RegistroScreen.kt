@@ -33,18 +33,13 @@ import com.example.museodelosmuseos.util.formatearRut
 import com.example.museodelosmuseos.util.validarRut
 import com.example.museodelosmuseos.util.validarDespacho
 
-private val coloresAvatar = listOf(
-    Color(0xFF1B4965),
-    Color(0xFF8A5A44),
-    Color(0xFF5F7A61),
-    Color(0xFF7B5EA7)
-)
 
 @Composable
 fun RegistroScreen(
     onRegistrar: (Usuario) -> Unit,
     onIrALogin: () -> Unit,
-    onVolver: () -> Unit
+    onVolver: () -> Unit,
+    errorExterno: String? = null
 ) {
     var nombre by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
@@ -91,6 +86,12 @@ fun RegistroScreen(
             text = "Únete a la comunidad de Museo de los Museos",
             color = AzulOscuro.copy(alpha = 0.7f)
         )
+
+        errorExterno?.let {
+            Spacer(Modifier.height(8.dp))
+            Text(it, color = MaterialTheme.colorScheme.error)
+        }
+
         Spacer(Modifier.height(24.dp))
 
         OutlinedTextField(

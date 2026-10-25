@@ -7,9 +7,12 @@ import com.example.museodelosmuseos.model.Rol
 import com.example.museodelosmuseos.model.Usuario
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.repository.ResultadoAuth
+import com.example.museodelosmuseos.repository.local.UsuarioEntity
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 // Une las pantallas de Login y Registro con la base de datos (Room).
@@ -19,6 +22,10 @@ class AuthViewModel(private val repo: LocalRepository) : ViewModel() {
     // Mensaje de error que viene de la base de datos (correo repetido, clave incorrecta...)
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    // Usuario con sesión iniciada; el Dashboard y el Perfil lo observan
+    val usuarioActivo: StateFlow<UsuarioEntity?> = repo.usuarioActivo
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     // Evita que un doble clic registre o inicie sesión dos veces
     private var procesando = false
@@ -68,6 +75,8 @@ class AuthViewModel(private val repo: LocalRepository) : ViewModel() {
             }
         }
     }
+
+    fun cerrarSesion() = repo.cerrarSesion()
 
     fun limpiarError() {
         _error.value = null

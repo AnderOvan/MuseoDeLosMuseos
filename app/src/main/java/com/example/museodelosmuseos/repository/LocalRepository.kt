@@ -92,6 +92,36 @@ class LocalRepository(
         return ResultadoAuth.Exito(usuario)
     }
 
+    // Cuentas ficticias para probar los tres roles (datos de demostración)
+    suspend fun crearCuentasDePrueba() {
+        val dao = db.usuarioDao()
+
+        if (dao.buscarPorCorreo("admin@museo.cl") == null) {
+            dao.insertar(
+                UsuarioEntity(
+                    nombre = "Administrador Demo",
+                    rut = "11.111.111-1",
+                    correo = "admin@museo.cl",
+                    claveHash = Cifrado.sha256("admin123"),
+                    despacho = "",
+                    rol = Rol.ADMINISTRADOR
+                )
+            )
+        }
+        if (dao.buscarPorCorreo("investigador@museo.cl") == null) {
+            dao.insertar(
+                UsuarioEntity(
+                    nombre = "Investigador Demo",
+                    rut = "22.222.222-2",
+                    correo = "investigador@museo.cl",
+                    claveHash = Cifrado.sha256("invest123"),
+                    despacho = "",
+                    rol = Rol.INVESTIGADOR
+                )
+            )
+        }
+    }
+
     fun cerrarSesion() = sesion.cerrarSesion()
 
     // ---------- Favoritos (solo del usuario activo) ----------
