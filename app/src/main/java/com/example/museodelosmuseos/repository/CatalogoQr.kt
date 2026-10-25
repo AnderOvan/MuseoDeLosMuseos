@@ -18,18 +18,11 @@ data class FichaQr(
 // Los museos se toman de FakeMuseoRepository.
 object CatalogoQr {
 
-    val PRODUCTOS = listOf(
-        FichaQr(TipoContenidoQr.PRODUCTO, "L001", "Arte precolombino de Iberoamérica", "Libro",
-            "Tienda Museo de los Museos", "Libro ilustrado sobre las culturas originarias de América.", 35.0),
-        FichaQr(TipoContenidoQr.PRODUCTO, "L002", "Guía de museos virtuales", "Libro",
-            "Tienda Museo de los Museos", "Guía práctica para recorrer museos de Iberoamérica en línea.", 22.5),
-        FichaQr(TipoContenidoQr.PRODUCTO, "M001", "Polera Museo de los Museos", "Merch",
-            "Tienda Museo de los Museos", "Polera de algodón con el logo de la plataforma.", 18.0),
-        FichaQr(TipoContenidoQr.PRODUCTO, "M002", "Taza ilustrada", "Merch",
-            "Tienda Museo de los Museos", "Taza de cerámica con ilustraciones de piezas patrimoniales.", 12.0),
-        FichaQr(TipoContenidoQr.PRODUCTO, "C001", "Curso de curaduría digital", "Curso",
-            "Escuela Museo de los Museos", "Aprende a diseñar exposiciones virtuales paso a paso.", 60.0)
-    )
+    // Los productos salen del catálogo de la tienda: así el QR y el catálogo muestran lo mismo
+    val PRODUCTOS: List<FichaQr> = FakeProductoRepository.PRODUCTOS.map {
+        FichaQr(TipoContenidoQr.PRODUCTO, it.id, it.titulo, it.categoria,
+            "Tienda Museo de los Museos", it.descripcion, it.precio)
+    }
 
     val PUBLICACIONES = listOf(
         FichaQr(TipoContenidoQr.PUBLICACION, "001", "El Arte Colonial en Iberoamérica", "Publicación",

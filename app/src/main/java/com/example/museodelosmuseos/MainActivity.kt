@@ -1,5 +1,6 @@
 package com.example.museodelosmuseos
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,9 +10,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.museodelosmuseos.repository.FakeMuseoRepository
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.screens.BienvenidaScreen
+import com.example.museodelosmuseos.ui.screens.CatalogoScreen
 import com.example.museodelosmuseos.ui.screens.DetalleMuseoScreen
 import com.example.museodelosmuseos.ui.screens.DetalleProductoScreen
 import com.example.museodelosmuseos.ui.screens.EscanerScreen
@@ -20,13 +23,13 @@ import com.example.museodelosmuseos.ui.screens.LoginScreen
 import com.example.museodelosmuseos.ui.screens.MapaScreen
 import com.example.museodelosmuseos.ui.screens.PantallaPendiente
 import com.example.museodelosmuseos.ui.screens.RegistroScreen
+import com.example.museodelosmuseos.ui.screens.ResultadoQrScreen
 import com.example.museodelosmuseos.util.TipoContenidoQr
 import com.example.museodelosmuseos.viewmodel.AuthViewModel
-import com.example.museodelosmuseos.viewmodel.HomeViewModel
-import com.example.museodelosmuseos.repository.FakeMuseoRepository
+import com.example.museodelosmuseos.viewmodel.CatalogoViewModel
 import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
-import android.net.Uri
-import com.example.museodelosmuseos.ui.screens.ResultadoQrScreen
+import com.example.museodelosmuseos.viewmodel.HomeViewModel
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -126,7 +129,20 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                // ---------- Escáner QR (Recurso nativo 1) y detalles ----------
+                // ---------- Catálogo de productos y cursos ----------
+                composable(Rutas.CATALOGO) {
+                    val catalogoViewModel: CatalogoViewModel =
+                        viewModel(factory = CatalogoViewModel.factory(localRepository))
+                    CatalogoScreen(
+                        viewModel = catalogoViewModel,
+                        onNavegarADetalle = { id ->
+                            navController.navigate("${Rutas.DETALLE_PRODUCTO}/${TipoContenidoQr.PRODUCTO.name}/$id")
+                        },
+                        onNavegar = navegarSeccion
+                    )
+                }
+
+                // ---------- Escáner QR (Recurso nativo 1) y resultado ----------
                 composable(Rutas.ESCANER_QR) {
                     EscanerScreen(
                         onResultado = { estado, contenido ->
@@ -152,6 +168,8 @@ class MainActivity : ComponentActivity() {
                         onVolverAEscanear = { navController.popBackStack() }
                     )
                 }
+
+                // ---------- Detalles ----------
                 composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->
                     DetalleProductoScreen(
                         codigo = entrada.arguments?.getString("codigo").orEmpty(),
@@ -176,7 +194,6 @@ class MainActivity : ComponentActivity() {
 
                 // ---------- Secciones aún no integradas (pantalla temporal) ----------
                 listOf(
-                    Rutas.CATALOGO to "Catálogo",
                     Rutas.FAVORITOS to "Favoritos",
                     Rutas.CARRITO to "Carrito",
                     Rutas.NOTIFICACIONES to "Notificaciones",
