@@ -24,13 +24,14 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.museodelosmuseos.modelo.Usuario
+import com.example.museodelosmuseos.model.Usuario
 import com.example.museodelosmuseos.ui.theme.*
 import com.example.museodelosmuseos.util.validarContrasena
 import com.example.museodelosmuseos.util.validarCorreo
 import com.example.museodelosmuseos.util.validarNombre
 import com.example.museodelosmuseos.util.formatearRut
 import com.example.museodelosmuseos.util.validarRut
+import com.example.museodelosmuseos.util.validarDespacho
 
 private val coloresAvatar = listOf(
     Color(0xFF1B4965),
@@ -53,17 +54,21 @@ fun RegistroScreen(
     var verContrasena by remember { mutableStateOf(false) }
     var avatar by remember { mutableIntStateOf(0) }
     var intentoEnvio by remember { mutableStateOf(false) }
+    var despacho by remember { mutableStateOf("") }
 
     val errorNombre = validarNombre(nombre)
     val errorRut = validarRut(rut)
     val errorCorreo = validarCorreo(correo)
     val errorContrasena = validarContrasena(contrasena)
+    val errorDespacho = validarDespacho(despacho)
     val formularioValido =
-        errorNombre == null && errorRut == null && errorCorreo == null && errorContrasena == null
+        errorNombre == null && errorRut == null && errorCorreo == null && errorContrasena == null && errorDespacho == null
+
 
     val mostrarNombre = if (intentoEnvio) errorNombre else null
     val mostrarRut = if (intentoEnvio) errorRut else null
     val mostrarCorreo = if (intentoEnvio) errorCorreo else null
+    val mostrarDespacho = if (intentoEnvio) errorDespacho else null
     val mostrarContrasena = if (intentoEnvio) errorContrasena else null
 
     Column(
@@ -125,6 +130,18 @@ fun RegistroScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             isError = mostrarCorreo != null,
             supportingText = { mostrarCorreo?.let { Text(it) } },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        OutlinedTextField(
+            value = despacho,
+            onValueChange = { despacho = it },
+            label = { Text("Dirección de despacho") },
+            placeholder = { Text("Av. Ejemplo 1234, Comuna") },
+            leadingIcon = { Icon(Icons.Filled.LocalShipping, null) },
+            singleLine = true,
+            isError = mostrarDespacho != null,
+            supportingText = { mostrarDespacho?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -191,6 +208,7 @@ fun RegistroScreen(
                             rut = rut,
                             correo = correo.trim(),
                             contrasena = contrasena,
+                            despacho = despacho,
                             avatar = avatar
                         )
                     )

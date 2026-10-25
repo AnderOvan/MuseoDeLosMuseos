@@ -1,9 +1,10 @@
 package com.example.museodelosmuseos.viewmodel
 
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.museodelosmuseos.model.LecturaQrEntity
+import com.example.museodelosmuseos.repository.local.LecturaQrEntity
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.repository.ResultadoQr
 import com.example.museodelosmuseos.util.QrLeido

@@ -1,13 +1,18 @@
 package com.example.museodelosmuseos.repository
 
 import android.content.Context
-import com.example.museodelosmuseos.model.FavoritoEntity
-import com.example.museodelosmuseos.model.LecturaQrEntity
-import com.example.museodelosmuseos.model.ProductoCacheEntity
-import com.example.museodelosmuseos.model.UsuarioEntity
+import com.example.museodelosmuseos.model.Rol
 import com.example.museodelosmuseos.repository.local.AppDatabase
 import com.example.museodelosmuseos.repository.local.Cifrado
-import com.example.museodelosmuseos.repository.local.SessionManager
+
+// Importaciones llamadas desde la clase Entidades Locales
+import com.example.museodelosmuseos.repository.local.FavoritoEntity
+import com.example.museodelosmuseos.repository.local.LecturaQrEntity
+import com.example.museodelosmuseos.repository.local.ProductoCacheEntity
+import com.example.museodelosmuseos.repository.local.UsuarioEntity
+
+import com.example.museodelosmuseos.repository.local.SesionManager
+
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,9 +33,9 @@ enum class ResultadoQr { GUARDADA, DUPLICADA, SIN_SESION }
 @OptIn(ExperimentalCoroutinesApi::class)
 class LocalRepository(
     private val db: AppDatabase,
-    private val session: SessionManager
+    private val sesion: SesionManager
 ) {
-    val usuarioActivoId: StateFlow<Long?> = session.usuarioActivoId
+    val usuarioActivoId: StateFlow<Long?> = sesion.usuarioActivoId
 
     // Datos del usuario con sesión iniciada (null si nadie inició sesión)
     val usuarioActivo: Flow<UsuarioEntity?> =
@@ -43,15 +48,16 @@ class LocalRepository(
     suspend fun registrarUsuario(
         nombre: String,
         rut: String,
-        email: String,
+        correo: String,
         clave: String,
-        direccion: String,
-        rol: String = "CLIENTE"
+        despacho: String,
+        rol: Rol = Rol.CLIENTE,
+        avatar: Int = 0
     ): ResultadoAuth {
         val dao = db.usuarioDao()
-        val correo = email.trim().lowercase()
+        val correoLimpio = correo.trim().lowercase()
 
-        if (dao.buscarPorEmail(correo) != null) {
+        if (dao.buscarPorCorreo(correoLimpio) != null) {
             return ResultadoAuth.Error("Este correo ya está registrado")
         }
         if (dao.buscarPorRut(rut) != null) {
@@ -61,31 +67,32 @@ class LocalRepository(
         val nuevo = UsuarioEntity(
             nombre = nombre.trim(),
             rut = rut,
-            email = correo,
+            correo = correoLimpio,
             claveHash = Cifrado.sha256(clave),
-            direccion = direccion.trim(),
-            rol = rol
+            despacho = despacho.trim(),
+            rol = rol,
+            avatar = avatar
         )
         val id = dao.insertar(nuevo)
-        session.iniciarSesion(id)
+        sesion.iniciarSesion(id)
         return ResultadoAuth.Exito(nuevo.copy(id = id))
     }
 
-    suspend fun iniciarSesion(email: String, clave: String): ResultadoAuth {
+    suspend fun iniciarSesion(correo: String, clave: String): ResultadoAuth {
         val dao = db.usuarioDao()
-        val correo = email.trim().lowercase()
+        val correoLimpio = correo.trim().lowercase()
 
-        if (dao.buscarPorEmail(correo) == null) {
+        if (dao.buscarPorCorreo(correoLimpio) == null) {
             return ResultadoAuth.Error("No existe una cuenta con este correo")
         }
-        val usuario = dao.autenticar(correo, Cifrado.sha256(clave))
+        val usuario = dao.autenticar(correoLimpio, Cifrado.sha256(clave))
             ?: return ResultadoAuth.Error("Contraseña incorrecta")
 
-        session.iniciarSesion(usuario.id)
+        sesion.iniciarSesion(usuario.id)
         return ResultadoAuth.Exito(usuario)
     }
 
-    fun cerrarSesion() = session.cerrarSesion()
+    fun cerrarSesion() = sesion.cerrarSesion()
 
     // ---------- Favoritos (solo del usuario activo) ----------
 
@@ -158,7 +165,7 @@ class LocalRepository(
 
         fun crear(context: Context) = LocalRepository(
             AppDatabase.getInstance(context),
-            SessionManager.getInstance(context)
+            SesionManager.getInstance(context)
         )
     }
 }

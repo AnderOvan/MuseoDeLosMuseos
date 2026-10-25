@@ -1,4 +1,4 @@
-package com.example.museodelosmuseos.modelo
+package com.example.museodelosmuseos.model
 
 enum class Rol(val titulo: String, val descripcion: String) {
     ADMINISTRADOR("Administrador", "Gestión completa del sistema"),

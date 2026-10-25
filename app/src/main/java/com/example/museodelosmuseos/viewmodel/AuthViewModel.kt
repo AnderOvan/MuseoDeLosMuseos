@@ -3,8 +3,8 @@ package com.example.museodelosmuseos.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.museodelosmuseos.modelo.Rol
-import com.example.museodelosmuseos.modelo.Usuario
+import com.example.museodelosmuseos.model.Rol
+import com.example.museodelosmuseos.model.Usuario
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.repository.ResultadoAuth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,10 +32,11 @@ class AuthViewModel(private val repo: LocalRepository) : ViewModel() {
             val resultado = repo.registrarUsuario(
                 nombre = usuario.nombre,
                 rut = usuario.rut,
-                email = usuario.correo,
+                correo = usuario.correo,
                 clave = usuario.contrasena,
-                direccion = "", // El formulario aún no tiene dirección de despacho
-                rol = usuario.rol.name
+                despacho = usuario.despacho,
+                rol = usuario.rol,
+                avatar = usuario.avatar
             )
             procesando = false
             when (resultado) {
@@ -56,7 +57,7 @@ class AuthViewModel(private val repo: LocalRepository) : ViewModel() {
             when (resultado) {
                 is ResultadoAuth.Exito ->
                     // La cuenta existe, pero hay que revisar que sea del tipo elegido
-                    if (resultado.usuario.rol == rol.name) {
+                    if (resultado.usuario.rol == rol) {
                         onExito()
                     } else {
                         repo.cerrarSesion()
