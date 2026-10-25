@@ -23,7 +23,8 @@ import com.example.museodelosmuseos.ui.screens.RegistroScreen
 import com.example.museodelosmuseos.util.TipoContenidoQr
 import com.example.museodelosmuseos.viewmodel.AuthViewModel
 import com.example.museodelosmuseos.viewmodel.HomeViewModel
-
+import com.example.museodelosmuseos.repository.FakeMuseoRepository
+import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,9 +149,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
                 composable("${Rutas.DETALLE_MUSEO}/{codigo}") { entrada ->
+                    val codigo = entrada.arguments?.getString("codigo").orEmpty()
+                    // Cada museo abierto tiene su propio ViewModel (con su id)
+                    val detalleViewModel: DetalleMuseoViewModel = viewModel(
+                        factory = DetalleMuseoViewModel.factory(codigo, FakeMuseoRepository(), localRepository)
+                    )
                     DetalleMuseoScreen(
-                        codigo = entrada.arguments?.getString("codigo").orEmpty(),
-                        onVolver = { navController.popBackStack() }
+                        viewModel = detalleViewModel,
+                        onVolver = { navController.popBackStack() },
+                        onNavegar = navegarSeccion
                     )
                 }
 
