@@ -25,6 +25,8 @@ import com.example.museodelosmuseos.viewmodel.AuthViewModel
 import com.example.museodelosmuseos.viewmodel.HomeViewModel
 import com.example.museodelosmuseos.repository.FakeMuseoRepository
 import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
+import android.net.Uri
+import com.example.museodelosmuseos.ui.screens.ResultadoQrScreen
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,6 +129,17 @@ class MainActivity : ComponentActivity() {
                 // ---------- Escáner QR (Recurso nativo 1) y detalles ----------
                 composable(Rutas.ESCANER_QR) {
                     EscanerScreen(
+                        onResultado = { estado, contenido ->
+                            // Uri.encode: el texto del QR puede traer "/" u otros símbolos
+                            navController.navigate("${Rutas.RESULTADO_QR}/$estado/${Uri.encode(contenido)}")
+                        },
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+                composable("${Rutas.RESULTADO_QR}/{estado}/{contenido}") { entrada ->
+                    ResultadoQrScreen(
+                        estado = entrada.arguments?.getString("estado").orEmpty(),
+                        contenido = entrada.arguments?.getString("contenido").orEmpty(),
                         onVerDetalle = { qr ->
                             when (qr.tipo) {
                                 TipoContenidoQr.MUSEO ->
@@ -136,7 +149,7 @@ class MainActivity : ComponentActivity() {
                                 TipoContenidoQr.DESCONOCIDO -> Unit
                             }
                         },
-                        onVolver = { navController.popBackStack() }
+                        onVolverAEscanear = { navController.popBackStack() }
                     )
                 }
                 composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->

@@ -1,47 +1,33 @@
 package com.example.museodelosmuseos.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.museodelosmuseos.repository.CatalogoQr
 import com.example.museodelosmuseos.ui.theme.AzulOscuro
+import com.example.museodelosmuseos.ui.theme.Blanco
 import com.example.museodelosmuseos.ui.theme.Crema
 import com.example.museodelosmuseos.ui.theme.Dorado
+import com.example.museodelosmuseos.util.QrLeido
 import com.example.museodelosmuseos.util.TipoContenidoQr
 
-// Detalle de un producto o publicación escaneado (versión provisoria)
+// Ficha de un producto o publicación (se abre desde el Resultado del QR).
+// El detalle de museos está en DetalleMuseoScreen.kt
 @Composable
 fun DetalleProductoScreen(codigo: String, tipo: TipoContenidoQr, onVolver: () -> Unit) {
-    DetalleBase(
-        icono = if (tipo == TipoContenidoQr.PUBLICACION) Icons.Filled.MenuBook else Icons.Filled.ShoppingBag,
-        tipo = tipo.titulo,
-        codigo = codigo,
-        onVolver = onVolver
-    )
-}
+    val ficha = CatalogoQr.buscar(QrLeido(contenido = "", tipo = tipo, codigo = codigo))
 
-// Detalle de un museo escaneado (versión provisoria)
-// Detalle de un museo (desde el mapa o desde un QR "MUSEO_MU01")
-
-
-@Composable
-private fun DetalleBase(icono: ImageVector, tipo: String, codigo: String, onVolver: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -52,14 +38,41 @@ private fun DetalleBase(icono: ImageVector, tipo: String, codigo: String, onVolv
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = AzulOscuro)
         }
         Spacer(Modifier.height(16.dp))
-        Icon(icono, null, tint = Dorado, modifier = Modifier.size(72.dp))
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(140.dp)
+                .background(colorTipoQr(tipo), RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(iconoTipoQr(tipo), null, tint = Blanco, modifier = Modifier.size(64.dp))
+        }
         Spacer(Modifier.height(16.dp))
-        Text(tipo, color = AzulOscuro, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        Text("Código: $codigo", color = AzulOscuro.copy(alpha = 0.75f), fontSize = 18.sp)
+
+        if (ficha == null) {
+            Text("Contenido no encontrado", color = AzulOscuro, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Text("Código: $codigo", color = AzulOscuro.copy(alpha = 0.7f))
+            return@Column
+        }
+
+        Text(ficha.titulo, color = AzulOscuro, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Etiqueta(ficha.etiqueta, colorTipoQr(tipo))
+        Spacer(Modifier.height(10.dp))
+        Text(ficha.fuente, color = AzulOscuro, fontWeight = FontWeight.SemiBold)
+        Text(ficha.descripcion, color = AzulOscuro.copy(alpha = 0.85f))
+
+        ficha.precioUsd?.let { precio ->
+            Spacer(Modifier.height(16.dp))
+            Text("USD %.2f".format(precio), color = Dorado, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        }
+
         Spacer(Modifier.height(16.dp))
         Text(
-            "Aquí se mostrará el detalle completo cuando se integre el catálogo.",
-            color = AzulOscuro.copy(alpha = 0.6f)
+            "Código: ${tipo.prefijo}$codigo",
+            color = AzulOscuro.copy(alpha = 0.5f),
+            fontSize = 12.sp
         )
     }
 }
