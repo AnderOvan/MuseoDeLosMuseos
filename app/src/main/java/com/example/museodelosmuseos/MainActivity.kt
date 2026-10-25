@@ -17,6 +17,7 @@ import com.example.museodelosmuseos.ui.screens.DetalleProductoScreen
 import com.example.museodelosmuseos.ui.screens.EscanerScreen
 import com.example.museodelosmuseos.ui.screens.HomeScreen
 import com.example.museodelosmuseos.ui.screens.LoginScreen
+import com.example.museodelosmuseos.ui.screens.MapaScreen
 import com.example.museodelosmuseos.ui.screens.PantallaPendiente
 import com.example.museodelosmuseos.ui.screens.RegistroScreen
 import com.example.museodelosmuseos.util.TipoContenidoQr
@@ -41,6 +42,19 @@ class MainActivity : ComponentActivity() {
             val irAlDashboard = {
                 navController.navigate(Rutas.DASHBOARD) {
                     popUpTo(Rutas.BIENVENIDA) { inclusive = true }
+                }
+            }
+
+            // Navegación de la barra inferior y de los accesos del inicio:
+            // "atrás" siempre vuelve a Inicio y no se apilan pantallas repetidas
+            val navegarSeccion: (String) -> Unit = { ruta ->
+                if (ruta == Rutas.DASHBOARD) {
+                    navController.popBackStack(Rutas.DASHBOARD, inclusive = false)
+                } else {
+                    navController.navigate(ruta) {
+                        popUpTo(Rutas.DASHBOARD)
+                        launchSingleTop = true
+                    }
                 }
             }
 
@@ -96,11 +110,20 @@ class MainActivity : ComponentActivity() {
 
                     HomeScreen(
                         nombreUsuario = nombre,
-                        onNavegar = { ruta -> navController.navigate(ruta) }
+                        onNavegar = navegarSeccion
                     )
                 }
 
-                // ---------- Escáner QR y detalles ----------
+                // ---------- Mapa de museos (Recurso nativo 2) ----------
+                composable(Rutas.MAPA) {
+                    MapaScreen(
+                        onVerDetalle = { id -> navController.navigate("${Rutas.DETALLE_MUSEO}/$id") },
+                        onNavegar = navegarSeccion,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                // ---------- Escáner QR (Recurso nativo 1) y detalles ----------
                 composable(Rutas.ESCANER_QR) {
                     EscanerScreen(
                         onVerDetalle = { qr ->
@@ -133,7 +156,6 @@ class MainActivity : ComponentActivity() {
 
                 // ---------- Secciones aún no integradas (pantalla temporal) ----------
                 listOf(
-                    Rutas.MAPA to "Mapa de museos",
                     Rutas.CATALOGO to "Catálogo",
                     Rutas.FAVORITOS to "Favoritos",
                     Rutas.CARRITO to "Carrito",

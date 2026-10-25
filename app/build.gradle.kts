@@ -70,4 +70,7 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.mlkit.barcode)
     implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Mapa OpenStreetMap
+    implementation(libs.osmdroid)
 }

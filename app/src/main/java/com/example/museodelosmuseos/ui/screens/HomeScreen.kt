@@ -26,7 +26,7 @@ import com.example.museodelosmuseos.ui.theme.AzulOscuro
 import com.example.museodelosmuseos.ui.theme.Blanco
 import com.example.museodelosmuseos.ui.theme.Crema
 import com.example.museodelosmuseos.ui.theme.Dorado
-
+import com.example.museodelosmuseos.ui.components.BarraNavegacion
 // Un botón de la pantalla: texto, ícono y a qué ruta lleva
 private data class Acceso(val titulo: String, val icono: ImageVector, val ruta: String)
 
@@ -53,13 +53,7 @@ private val EXPLORA = listOf(
     Exploracion("Novedades", "Exposiciones y eventos", Icons.Filled.Event, Rutas.NOTIFICACIONES)
 )
 
-private val BARRA_INFERIOR = listOf(
-    Acceso("Inicio", Icons.Filled.Home, Rutas.DASHBOARD),
-    Acceso("Mapa", Icons.Filled.Map, Rutas.MAPA),
-    Acceso("Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO),
-    Acceso("Notificaciones", Icons.Filled.Notifications, Rutas.NOTIFICACIONES),
-    Acceso("Perfil", Icons.Filled.Person, Rutas.PERFIL)
-)
+
 
 @Composable
 fun HomeScreen(
@@ -68,7 +62,7 @@ fun HomeScreen(
 ) {
     Scaffold(
         containerColor = Crema,
-        bottomBar = { BarraInferior(onNavegar) }
+        bottomBar = { BarraNavegacion(rutaActual = Rutas.DASHBOARD, onNavegar = onNavegar) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -253,27 +247,7 @@ private fun BannerDestacado(onExplorar: () -> Unit) {
     }
 }
 
-@Composable
-private fun BarraInferior(onNavegar: (String) -> Unit) {
-    NavigationBar(containerColor = Blanco) {
-        BARRA_INFERIOR.forEach { destino ->
-            val activo = destino.ruta == Rutas.DASHBOARD // Estamos en Inicio
-            NavigationBarItem(
-                selected = activo,
-                onClick = { if (!activo) onNavegar(destino.ruta) },
-                icon = { Icon(destino.icono, destino.titulo) },
-                label = { Text(destino.titulo, fontSize = 10.sp, maxLines = 1) },
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = AzulOscuro,
-                    selectedTextColor = AzulOscuro,
-                    indicatorColor = Dorado.copy(alpha = 0.35f),
-                    unselectedIconColor = AzulOscuro.copy(alpha = 0.5f),
-                    unselectedTextColor = AzulOscuro.copy(alpha = 0.5f)
-                )
-            )
-        }
-    }
-}
+
 
 @Preview(showBackground = true)
 @Composable

@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.ShoppingBag
 import androidx.compose.material3.Icon
@@ -38,15 +37,8 @@ fun DetalleProductoScreen(codigo: String, tipo: TipoContenidoQr, onVolver: () ->
 }
 
 // Detalle de un museo escaneado (versión provisoria)
-@Composable
-fun DetalleMuseoScreen(codigo: String, onVolver: () -> Unit) {
-    DetalleBase(
-        icono = Icons.Filled.AccountBalance,
-        tipo = TipoContenidoQr.MUSEO.titulo,
-        codigo = codigo,
-        onVolver = onVolver
-    )
-}
+// Detalle de un museo (desde el mapa o desde un QR "MUSEO_MU01")
+
 
 @Composable
 private fun DetalleBase(icono: ImageVector, tipo: String, codigo: String, onVolver: () -> Unit) {
