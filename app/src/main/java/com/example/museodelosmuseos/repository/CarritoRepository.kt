@@ -39,6 +39,13 @@ object CarritoRepository {
         _items.update { lista -> lista.filterNot { it.producto.id == productoId } }
     }
 
+    // Cambia la cantidad de un producto que ya está en el carrito (mínimo 1)
+    fun cambiarCantidad(productoId: String, cantidad: Int) {
+        _items.update { lista ->
+            lista.map { if (it.producto.id == productoId) it.copy(cantidad = maxOf(1, cantidad)) else it }
+        }
+    }
+
     fun vaciar() {
         _items.value = emptyList()
     }

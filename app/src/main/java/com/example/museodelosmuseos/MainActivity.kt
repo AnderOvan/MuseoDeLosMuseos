@@ -33,6 +33,8 @@ import com.example.museodelosmuseos.ui.screens.DetallePublicacionScreen
 import com.example.museodelosmuseos.viewmodel.DetalleProductoViewModel
 import com.example.museodelosmuseos.ui.screens.FavoritosScreen
 import com.example.museodelosmuseos.viewmodel.FavoritosViewModel
+import com.example.museodelosmuseos.ui.screens.CotizadorScreen
+import com.example.museodelosmuseos.viewmodel.CotizadorViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -225,10 +227,21 @@ class MainActivity : ComponentActivity() {
                         onVolver = { navController.popBackStack() }
                     )
                 }
+                // ---------- Carrito y cotización de envíos ----------
+                composable(Rutas.CARRITO) {
+                    val cotizadorViewModel: CotizadorViewModel = viewModel()
+                    CotizadorScreen(
+                        viewModel = cotizadorViewModel,
+                        onIrAlCatalogo = { navegarSeccion(Rutas.CATALOGO) },
+                        onVolverAlInicio = { navegarSeccion(Rutas.DASHBOARD) },
+                        onNavegar = navegarSeccion,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
 
                 // ---------- Secciones aún no integradas (pantalla temporal) ----------
                 listOf(
-                    Rutas.CARRITO to "Carrito",
+
                     Rutas.NOTIFICACIONES to "Notificaciones",
                     Rutas.PERFIL to "Perfil"
                 ).forEach { (ruta, titulo) ->
