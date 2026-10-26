@@ -31,6 +31,8 @@ import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
 import com.example.museodelosmuseos.viewmodel.HomeViewModel
 import com.example.museodelosmuseos.ui.screens.DetallePublicacionScreen
 import com.example.museodelosmuseos.viewmodel.DetalleProductoViewModel
+import com.example.museodelosmuseos.ui.screens.FavoritosScreen
+import com.example.museodelosmuseos.viewmodel.FavoritosViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -207,10 +209,25 @@ class MainActivity : ComponentActivity() {
                         onNavegar = navegarSeccion
                     )
                 }
+                // ---------- Favoritos (Room, separados por usuario) ----------
+                composable(Rutas.FAVORITOS) {
+                    val favoritosViewModel: FavoritosViewModel =
+                        viewModel(factory = FavoritosViewModel.factory(localRepository))
+                    FavoritosScreen(
+                        viewModel = favoritosViewModel,
+                        onVerDetalleMuseo = { id -> navController.navigate("${Rutas.DETALLE_MUSEO}/$id") },
+                        onAbrirRecurso = { ficha ->
+                            navController.navigate("${Rutas.DETALLE_PRODUCTO}/${ficha.tipo.name}/${ficha.codigo}")
+                        },
+                        onNavegarAMapa = { navegarSeccion(Rutas.MAPA) },
+                        onIrAlEscaner = { navegarSeccion(Rutas.ESCANER_QR) },
+                        onNavegar = navegarSeccion,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
 
                 // ---------- Secciones aún no integradas (pantalla temporal) ----------
                 listOf(
-                    Rutas.FAVORITOS to "Favoritos",
                     Rutas.CARRITO to "Carrito",
                     Rutas.NOTIFICACIONES to "Notificaciones",
                     Rutas.PERFIL to "Perfil"
