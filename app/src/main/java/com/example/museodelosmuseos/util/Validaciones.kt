@@ -1,5 +1,10 @@
 package com.example.museodelosmuseos.util
 
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
+import androidx.compose.ui.text.input.VisualTransformation
+
 private val patronCorreo = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
 
 fun validarNombre(nombre: String): String? =
@@ -49,3 +54,69 @@ fun formatearRut(rut: String): String {
 
 fun validarDespacho(despacho: String): String? =
     if (despacho.trim().length < 5) "Ingresa un dirección de despacho válida" else null
+
+class RutVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val raw = text.text
+        if (raw.length <= 1) {
+            return TransformedText(text, OffsetMapping.Identity)
+        }
+
+        val body = raw.dropLast(1)
+        val dv = raw.last()
+
+        val bodyLen = body.length
+        val dotPositions = mutableSetOf<Int>()
+        for (i in 0 until bodyLen) {
+            val distFromRight = bodyLen - 1 - i
+            if (distFromRight > 0 && distFromRight % 3 == 0) {
+                dotPositions.add(i)
+            }
+        }
+
+        val formattedBody = StringBuilder()
+        val origToTrans = IntArray(raw.length + 1)
+
+        var currentTransformedIndex = 0
+        for (i in 0 until bodyLen) {
+            origToTrans[i] = currentTransformedIndex
+            formattedBody.append(body[i])
+            currentTransformedIndex++
+            if (i in dotPositions) {
+                formattedBody.append('.')
+                currentTransformedIndex++
+            }
+        }
+
+        origToTrans[bodyLen] = currentTransformedIndex
+        formattedBody.append('-')
+        currentTransformedIndex++
+        formattedBody.append(dv)
+        currentTransformedIndex++
+
+        origToTrans[raw.length] = currentTransformedIndex
+
+        val transformedStr = formattedBody.toString()
+        val transToOrig = IntArray(transformedStr.length + 1)
+
+        var origIdx = 0
+        for (i in 0..transformedStr.length) {
+            while (origIdx < raw.length && origToTrans[origIdx + 1] <= i) {
+                origIdx++
+            }
+            transToOrig[i] = origIdx
+        }
+
+        val offsetMapping = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int {
+                return origToTrans[offset.coerceIn(0, raw.length)]
+            }
+
+            override fun transformedToOriginal(offset: Int): Int {
+                return transToOrig[offset.coerceIn(0, transformedStr.length)]
+            }
+        }
+
+        return TransformedText(AnnotatedString(transformedStr), offsetMapping)
+    }
+}

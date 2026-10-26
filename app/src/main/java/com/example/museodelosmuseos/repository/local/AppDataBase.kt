@@ -11,9 +11,12 @@ import androidx.room.RoomDatabase
         UsuarioEntity::class,
         FavoritoEntity::class,
         LecturaQrEntity::class,
-        ProductoCacheEntity::class
+        ProductoCacheEntity::class,
+        PedidoEntity::class,
+        NotificacionEntity::class,
+        PreferenciasEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -22,6 +25,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun favoritoDao(): FavoritoDao
     abstract fun lecturaQrDao(): LecturaQrDao
     abstract fun productoCacheDao(): ProductoCacheDao
+    abstract fun pedidoDao(): PedidoDao
+    abstract fun notificacionDao(): NotificacionDao
+    abstract fun preferenciasDao(): PreferenciasDao
 
     companion object {
         @Volatile
@@ -41,4 +47,6 @@ abstract class AppDatabase : RoomDatabase() {
                     .also { INSTANCE = it }
             }
     }
+
+
 }
