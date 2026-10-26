@@ -86,7 +86,7 @@ fun DashboardScreen(
 
     Scaffold(
         containerColor = Crema,
-        bottomBar = { BarraNavegacion(Rutas.DASHBOARD, rol, onNavegar) }
+        bottomBar = { BarraNavegacion(Rutas.DASHBOARD, onNavegar, rol) }
     ) { padding ->
         Column(
             modifier = Modifier

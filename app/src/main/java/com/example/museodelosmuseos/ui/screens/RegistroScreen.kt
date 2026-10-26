@@ -30,8 +30,13 @@ import com.example.museodelosmuseos.util.validarContrasena
 import com.example.museodelosmuseos.util.validarCorreo
 import com.example.museodelosmuseos.util.validarNombre
 import com.example.museodelosmuseos.util.formatearRut
+import com.example.museodelosmuseos.util.limpiarRut
 import com.example.museodelosmuseos.util.validarRut
 import com.example.museodelosmuseos.util.validarDespacho
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.input.OffsetMapping
+import androidx.compose.ui.text.input.TransformedText
 
 
 @Composable
@@ -107,11 +112,16 @@ fun RegistroScreen(
 
         OutlinedTextField(
             value = rut,
-            onValueChange = { rut = formatearRut(it) },
+            onValueChange = { rut = limpiarRut(it).take(9) },
             label = { Text("RUT") },
             placeholder = { Text("12.345.678-5") },
             leadingIcon = { Icon(Icons.Filled.Badge, null) },
             singleLine = true,
+            visualTransformation = RutVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Ascii,
+                capitalization = KeyboardCapitalization.Characters
+            ),
             isError = mostrarRut != null,
             supportingText = { mostrarRut?.let { Text(it) } },
             modifier = Modifier.fillMaxWidth()
@@ -232,4 +242,22 @@ fun RegistroScreen(
 @Composable
 fun RegistroPreview() {
     RegistroScreen(onRegistrar = {}, onIrALogin = {}, onVolver = {})
+}
+
+// Muestra el RUT con puntos y guion sin tocar el texto que escribe el usuario
+private class RutVisualTransformation : VisualTransformation {
+    override fun filter(text: AnnotatedString): TransformedText {
+        val formateado = formatearRut(text.text)
+        // posición en el texto formateado de cada carácter real (dígito o K)
+        val posiciones = formateado.indices.filter { formateado[it].isDigit() || formateado[it] == 'K' }
+
+        val mapeo = object : OffsetMapping {
+            override fun originalToTransformed(offset: Int): Int =
+                if (offset <= 0) 0 else posiciones.getOrNull(offset - 1)?.plus(1) ?: formateado.length
+
+            override fun transformedToOriginal(offset: Int): Int =
+                formateado.take(offset).count { it.isDigit() || it == 'K' }
+        }
+        return TransformedText(AnnotatedString(formateado), mapeo)
+    }
 }

@@ -32,8 +32,8 @@ private data class ItemNavegacion(
 @Composable
 fun BarraNavegacion(
     rutaActual: String,
-    rol: Rol,
-    onNavegar: (String) -> Unit
+    onNavegar: (String) -> Unit,
+    rol: Rol = Rol.CLIENTE
 ) {
     val items = listOf(
         ItemNavegacion(Rutas.DASHBOARD, "Inicio", Icons.Filled.Home),
@@ -52,7 +52,7 @@ fun BarraNavegacion(
         items.forEach { item ->
             NavigationBarItem(
                 selected = item.ruta == rutaActual,
-                onClick = { onNavegar(item.ruta) },
+                onClick = { if (item.ruta != rutaActual) onNavegar(item.ruta) },
                 icon = { Icon(item.icono, contentDescription = item.etiqueta) },
                 label = { Text(item.etiqueta, fontSize = 11.sp, maxLines = 1) },
                 colors = NavigationBarItemDefaults.colors(

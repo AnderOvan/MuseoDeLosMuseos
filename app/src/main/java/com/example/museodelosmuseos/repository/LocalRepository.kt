@@ -99,7 +99,7 @@ class LocalRepository(
         if (dao.buscarPorCorreo("admin@museo.cl") == null) {
             dao.insertar(
                 UsuarioEntity(
-                    nombre = "Administrador Demo",
+                    nombre = "Usuario Administrador Prueba",
                     rut = "11.111.111-1",
                     correo = "admin@museo.cl",
                     claveHash = Cifrado.sha256("admin123"),
@@ -111,12 +111,25 @@ class LocalRepository(
         if (dao.buscarPorCorreo("investigador@museo.cl") == null) {
             dao.insertar(
                 UsuarioEntity(
-                    nombre = "Investigador Demo",
+                    nombre = "Usuario Investigador Prueba",
                     rut = "22.222.222-2",
                     correo = "investigador@museo.cl",
-                    claveHash = Cifrado.sha256("invest123"),
+                    claveHash = Cifrado.sha256("inv123"),
                     despacho = "",
                     rol = Rol.INVESTIGADOR
+                )
+            )
+        }
+
+        if (dao.buscarPorCorreo("cliente@museo.cl") == null) {
+            dao.insertar(
+                UsuarioEntity(
+                    nombre = "Usuario Cliente Prueba",
+                    rut = "12.345.678-5",
+                    correo = "cliente@museo.cl",
+                    claveHash = Cifrado.sha256("cliente123"),
+                    despacho = "Av. Ejemplo 1234, Santiago",
+                    rol = Rol.CLIENTE
                 )
             )
         }

@@ -1,5 +1,6 @@
 package com.example.museodelosmuseos
 
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,19 +8,27 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.museodelosmuseos.repository.FakeMuseoRepository
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.screens.BienvenidaScreen
 import com.example.museodelosmuseos.ui.screens.DashboardScreen
+import com.example.museodelosmuseos.ui.screens.DetalleMuseoScreen
+import com.example.museodelosmuseos.ui.screens.DetalleProductoScreen
+import com.example.museodelosmuseos.ui.screens.EscanerScreen
 import com.example.museodelosmuseos.ui.screens.LoginScreen
+import com.example.museodelosmuseos.ui.screens.MapaScreen
 import com.example.museodelosmuseos.ui.screens.PantallaPendiente
 import com.example.museodelosmuseos.ui.screens.RegistroScreen
+import com.example.museodelosmuseos.ui.screens.ResultadoQrScreen
+import com.example.museodelosmuseos.util.TipoContenidoQr
 import com.example.museodelosmuseos.viewmodel.AuthViewModel
+import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
 import kotlinx.coroutines.launch
-
 
 class MainActivity : ComponentActivity() {
 
@@ -113,12 +122,68 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // ---------- Mapa de museos ----------
+                composable(Rutas.MAPA) {
+                    MapaScreen(
+                        onVerDetalle = { id -> navController.navigate("${Rutas.DETALLE_MUSEO}/$id") },
+                        onNavegar = navegarSeccion,
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+
+                // ---------- Escáner QR y resultado ----------
+                composable(Rutas.ESCANER_QR) {
+                    EscanerScreen(
+                        onResultado = { estado, contenido ->
+                            // Uri.encode: el texto del QR puede traer "/" u otros símbolos
+                            navController.navigate("${Rutas.RESULTADO_QR}/$estado/${Uri.encode(contenido)}")
+                        },
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+                composable("${Rutas.RESULTADO_QR}/{estado}/{contenido}") { entrada ->
+                    ResultadoQrScreen(
+                        estado = entrada.arguments?.getString("estado").orEmpty(),
+                        contenido = entrada.arguments?.getString("contenido").orEmpty(),
+                        onVerDetalle = { qr ->
+                            when (qr.tipo) {
+                                TipoContenidoQr.MUSEO ->
+                                    navController.navigate("${Rutas.DETALLE_MUSEO}/${qr.codigo}")
+                                TipoContenidoQr.PRODUCTO, TipoContenidoQr.PUBLICACION ->
+                                    navController.navigate("${Rutas.DETALLE_PRODUCTO}/${qr.tipo.name}/${qr.codigo}")
+                                TipoContenidoQr.DESCONOCIDO -> Unit
+                            }
+                        },
+                        onVolverAEscanear = { navController.popBackStack() }
+                    )
+                }
+
+                // ---------- Detalles ----------
+                composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->
+                    DetalleProductoScreen(
+                        codigo = entrada.arguments?.getString("codigo").orEmpty(),
+                        tipo = TipoContenidoQr.valueOf(
+                            entrada.arguments?.getString("tipo") ?: TipoContenidoQr.PRODUCTO.name
+                        ),
+                        onVolver = { navController.popBackStack() }
+                    )
+                }
+                composable("${Rutas.DETALLE_MUSEO}/{codigo}") { entrada ->
+                    val codigo = entrada.arguments?.getString("codigo").orEmpty()
+                    // Cada museo abierto tiene su propio ViewModel (con su id)
+                    val detalleViewModel: DetalleMuseoViewModel = viewModel(
+                        factory = DetalleMuseoViewModel.factory(codigo, FakeMuseoRepository(), repo)
+                    )
+                    DetalleMuseoScreen(
+                        viewModel = detalleViewModel,
+                        onVolver = { navController.popBackStack() },
+                        onNavegar = navegarSeccion
+                    )
+                }
+
                 // ---------- Secciones aún no integradas ----------
-                // Cuando integren las pantallas de tu compañero, reemplaza la
-                // pantalla temporal de cada ruta por la real (Mapa, Escáner, Catálogo...)
+                // Reemplaza cada pantalla temporal cuando exista la real
                 listOf(
-                    Rutas.MAPA to "Mapa de museos",
-                    Rutas.ESCANER_QR to "Escáner QR",
                     Rutas.CATALOGO to "Catálogo",
                     Rutas.FAVORITOS to "Favoritos",
                     Rutas.HISTORIAL to "Historial de solicitudes",
