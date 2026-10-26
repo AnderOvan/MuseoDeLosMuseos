@@ -25,7 +25,7 @@ import com.example.museodelosmuseos.util.TipoContenidoQr
 // Ficha de un producto o publicación (se abre desde el Resultado del QR).
 // El detalle de museos está en DetalleMuseoScreen.kt
 @Composable
-fun DetalleProductoScreen(codigo: String, tipo: TipoContenidoQr, onVolver: () -> Unit) {
+fun DetallePublicacionScreen(codigo: String, tipo: TipoContenidoQr, onVolver: () -> Unit) {
     val ficha = CatalogoQr.buscar(QrLeido(contenido = "", tipo = tipo, codigo = codigo))
 
     Column(

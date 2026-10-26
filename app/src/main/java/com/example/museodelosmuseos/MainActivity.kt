@@ -29,7 +29,8 @@ import com.example.museodelosmuseos.viewmodel.AuthViewModel
 import com.example.museodelosmuseos.viewmodel.CatalogoViewModel
 import com.example.museodelosmuseos.viewmodel.DetalleMuseoViewModel
 import com.example.museodelosmuseos.viewmodel.HomeViewModel
-
+import com.example.museodelosmuseos.ui.screens.DetallePublicacionScreen
+import com.example.museodelosmuseos.viewmodel.DetalleProductoViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -171,13 +172,28 @@ class MainActivity : ComponentActivity() {
 
                 // ---------- Detalles ----------
                 composable("${Rutas.DETALLE_PRODUCTO}/{tipo}/{codigo}") { entrada ->
-                    DetalleProductoScreen(
-                        codigo = entrada.arguments?.getString("codigo").orEmpty(),
-                        tipo = TipoContenidoQr.valueOf(
-                            entrada.arguments?.getString("tipo") ?: TipoContenidoQr.PRODUCTO.name
-                        ),
-                        onVolver = { navController.popBackStack() }
+                    val codigo = entrada.arguments?.getString("codigo").orEmpty()
+                    val tipo = TipoContenidoQr.valueOf(
+                        entrada.arguments?.getString("tipo") ?: TipoContenidoQr.PRODUCTO.name
                     )
+                    if (tipo == TipoContenidoQr.PUBLICACION) {
+                        // Las publicaciones (QR "PUB_") tienen su propia ficha
+                        DetallePublicacionScreen(
+                            codigo = codigo,
+                            tipo = tipo,
+                            onVolver = { navController.popBackStack() }
+                        )
+                    } else {
+                        // Productos y cursos: detalle con cantidad y carrito
+                        val detalleProductoViewModel: DetalleProductoViewModel = viewModel(
+                            factory = DetalleProductoViewModel.factory(codigo, localRepository)
+                        )
+                        DetalleProductoScreen(
+                            viewModel = detalleProductoViewModel,
+                            onVolver = { navController.popBackStack() },
+                            onIrAlCarrito = { navegarSeccion(Rutas.CARRITO) }
+                        )
+                    }
                 }
                 composable("${Rutas.DETALLE_MUSEO}/{codigo}") { entrada ->
                     val codigo = entrada.arguments?.getString("codigo").orEmpty()

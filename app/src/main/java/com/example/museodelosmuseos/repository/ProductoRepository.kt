@@ -35,6 +35,11 @@ object FakeProductoRepository {
     fun buscarPorId(id: String): ProductoCacheEntity? = PRODUCTOS.find { it.id == id }
 
     // Simula la sincronización con el servidor y guarda todo en la caché SQLite (Room)
+    // Devuelve cuántas unidades hay disponibles (999 = curso digital).
+    suspend fun consultarStock(id: String): Int {
+        delay(500) // simula el tiempo de respuesta del servidor
+        return buscarPorId(id)?.stock ?: 0
+    }
     suspend fun sincronizar(local: LocalRepository) {
         delay(600) // simula el tiempo de respuesta de la red
         local.guardarCatalogo(PRODUCTOS)
