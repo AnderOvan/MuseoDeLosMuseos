@@ -46,6 +46,8 @@ import com.example.museodelosmuseos.viewmodel.NotificacionesViewModel
 import com.example.museodelosmuseos.viewmodel.PerfilViewModel
 import com.example.museodelosmuseos.repository.local.PreferenciasEntity
 import kotlinx.coroutines.launch
+import com.example.museodelosmuseos.model.Rol
+import com.example.museodelosmuseos.ui.components.LocalRol
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +64,9 @@ class MainActivity : ComponentActivity() {
             val authViewModel: AuthViewModel =
                 viewModel(factory = AuthViewModel.factory(localRepository))
             val errorAuth by authViewModel.error.collectAsState()
+            // Rol del usuario con sesión iniciada; sin sesión se asume Cliente
+            val usuarioActivo by localRepository.usuarioActivo.collectAsState(initial = null)
+            val rolActual = usuarioActivo?.rol ?: Rol.CLIENTE
 
             // Ajuste "Texto grande" del Perfil: agranda las letras de toda la app
             val preferencias by localRepository.preferencias
@@ -93,7 +98,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
-            CompositionLocalProvider(LocalDensity provides densidadApp) {
+            CompositionLocalProvider(
+                LocalDensity provides densidadApp,
+                LocalRol provides rolActual
+            ) {
                 NavHost(
                     navController = navController,
                     startDestination = Rutas.BIENVENIDA

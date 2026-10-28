@@ -12,28 +12,45 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
+import com.example.museodelosmuseos.model.Rol
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.theme.AzulOscuro
 import com.example.museodelosmuseos.ui.theme.Blanco
 import com.example.museodelosmuseos.ui.theme.Dorado
 
-private data class Destino(val titulo: String, val icono: ImageVector, val ruta: String)
+// Rol del usuario con sesión iniciada, disponible en cualquier pantalla.
+// MainActivity lo entrega con CompositionLocalProvider; por defecto es CLIENTE.
+val LocalRol = compositionLocalOf { Rol.CLIENTE }
+
+// Cada destino dice qué roles pueden verlo (por defecto, todos)
+private data class Destino(
+    val titulo: String,
+    val icono: ImageVector,
+    val ruta: String,
+    val roles: Set<Rol> = Rol.entries.toSet()
+)
 
 private val DESTINOS = listOf(
     Destino("Inicio", Icons.Filled.Home, Rutas.DASHBOARD),
     Destino("Mapa", Icons.Filled.Map, Rutas.MAPA),
-    Destino("Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO),
+    // El Investigador no usa el catálogo de compras
+    Destino(
+        "Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO,
+        roles = setOf(Rol.CLIENTE, Rol.ADMINISTRADOR)
+    ),
     Destino("Notificaciones", Icons.Filled.Notifications, Rutas.NOTIFICACIONES),
     Destino("Perfil", Icons.Filled.Person, Rutas.PERFIL)
 )
 
-// Barra inferior compartida: se usa en Inicio, Mapa y las demás secciones principales
+// Barra inferior compartida: muestra solo las pestañas del rol actual
 @Composable
 fun BarraNavegacion(rutaActual: String, onNavegar: (String) -> Unit) {
+    val rol = LocalRol.current
     NavigationBar(containerColor = Blanco) {
-        DESTINOS.forEach { destino ->
+        DESTINOS.filter { rol in it.roles }.forEach { destino ->
             val activo = destino.ruta == rutaActual
             NavigationBarItem(
                 selected = activo,

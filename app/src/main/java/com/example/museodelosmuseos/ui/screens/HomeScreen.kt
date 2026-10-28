@@ -27,8 +27,16 @@ import com.example.museodelosmuseos.ui.theme.Blanco
 import com.example.museodelosmuseos.ui.theme.Crema
 import com.example.museodelosmuseos.ui.theme.Dorado
 import com.example.museodelosmuseos.ui.components.BarraNavegacion
+import com.example.museodelosmuseos.ui.components.LocalRol
+import com.example.museodelosmuseos.model.Rol
 // Un botón de la pantalla: texto, ícono y a qué ruta lleva
-private data class Acceso(val titulo: String, val icono: ImageVector, val ruta: String)
+// "roles": quiénes ven ese botón (por defecto, todos)
+private data class Acceso(
+    val titulo: String,
+    val icono: ImageVector,
+    val ruta: String,
+    val roles: Set<Rol> = Rol.entries.toSet()
+)
 
 // Una tarjeta de la sección "Explora"
 private data class Exploracion(
@@ -38,12 +46,18 @@ private data class Exploracion(
     val ruta: String
 )
 
+private val ROL_CLIENTE = setOf(Rol.CLIENTE)
+private val ROL_ADMIN = setOf(Rol.ADMINISTRADOR)
+private val ROL_INVESTIGADOR = setOf(Rol.INVESTIGADOR)
+
 private val ACCESOS_RAPIDOS = listOf(
     Acceso("Mapa", Icons.Filled.Map, Rutas.MAPA),
-    Acceso("Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO),
-    Acceso("Escáner QR", Icons.Filled.QrCodeScanner, Rutas.ESCANER_QR),
-    Acceso("Favoritos", Icons.Filled.Favorite, Rutas.FAVORITOS),
-    Acceso("Carrito", Icons.Filled.ShoppingCart, Rutas.CARRITO)
+    Acceso("Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO, ROL_CLIENTE + ROL_ADMIN),
+    Acceso("Escáner QR", Icons.Filled.QrCodeScanner, Rutas.ESCANER_QR, ROL_CLIENTE + ROL_INVESTIGADOR),
+    Acceso("Favoritos", Icons.Filled.Favorite, Rutas.FAVORITOS, ROL_CLIENTE),
+    Acceso("Carrito", Icons.Filled.ShoppingCart, Rutas.CARRITO, ROL_CLIENTE),
+    Acceso("Solicitudes", Icons.Filled.Receipt, Rutas.HISTORIAL, ROL_CLIENTE + ROL_ADMIN),
+    Acceso("Avisos", Icons.Filled.Notifications, Rutas.NOTIFICACIONES, ROL_ADMIN + ROL_INVESTIGADOR)
 )
 
 private val EXPLORA = listOf(
@@ -60,6 +74,9 @@ fun HomeScreen(
     nombreUsuario: String,
     onNavegar: (String) -> Unit
 ) {
+    // Rol con sesión iniciada (lo entrega MainActivity)
+    val rol = LocalRol.current
+
     Scaffold(
         containerColor = Crema,
         bottomBar = { BarraNavegacion(rutaActual = Rutas.DASHBOARD, onNavegar = onNavegar) }
@@ -72,6 +89,7 @@ fun HomeScreen(
         ) {
             Encabezado(
                 nombre = nombreUsuario,
+                rol = rol,
                 onNotificaciones = { onNavegar(Rutas.NOTIFICACIONES) }
             )
 
@@ -86,37 +104,102 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                ACCESOS_RAPIDOS.forEach { acceso ->
+                ACCESOS_RAPIDOS.filter { rol in it.roles }.forEach { acceso ->
                     BotonCircular(acceso) { onNavegar(acceso.ruta) }
                 }
             }
 
             Spacer(Modifier.height(24.dp))
-            TituloSeccion("Explora")
 
-            // Grid 2x2 hecho con filas (evita conflictos de scroll con LazyGrid)
-            Column(
-                modifier = Modifier.padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                EXPLORA.chunked(2).forEach { fila ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        fila.forEach { item ->
-                            TarjetaExplora(item, Modifier.weight(1f)) { onNavegar(item.ruta) }
-                        }
-                    }
-                }
+            // Contenido según el rol: el Cliente ve "Explora" y el banner;
+            // Administrador e Investigador ven su propia tarjeta
+            when (rol) {
+                Rol.CLIENTE -> ContenidoCliente(onNavegar)
+                Rol.ADMINISTRADOR -> TarjetaRol(
+                    titulo = "Panel de gestión",
+                    descripcion = "Revisa las solicitudes de los clientes y cambia su estado.",
+                    icono = Icons.Filled.AdminPanelSettings,
+                    textoBoton = "Ver solicitudes",
+                    onClick = { onNavegar(Rutas.HISTORIAL) }
+                )
+                Rol.INVESTIGADOR -> TarjetaRol(
+                    titulo = "Registros museológicos",
+                    descripcion = "Escanea el código QR de una pieza o museo para registrarlo.",
+                    icono = Icons.Filled.QrCodeScanner,
+                    textoBoton = "Probar un código QR",
+                    onClick = { onNavegar(Rutas.ESCANER_QR) }
+                )
             }
-
-            Spacer(Modifier.height(24.dp))
-            BannerDestacado(onExplorar = { onNavegar(Rutas.MAPA) })
             Spacer(Modifier.height(24.dp))
         }
     }
 }
 
+// Secciones que solo ve el Cliente
 @Composable
-private fun Encabezado(nombre: String, onNotificaciones: () -> Unit) {
+private fun ContenidoCliente(onNavegar: (String) -> Unit) {
+    Column {
+        TituloSeccion("Explora")
+
+        // Grid 2x2 hecho con filas (evita conflictos de scroll con LazyGrid)
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            EXPLORA.chunked(2).forEach { fila ->
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    fila.forEach { item ->
+                        TarjetaExplora(item, Modifier.weight(1f)) { onNavegar(item.ruta) }
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+        BannerDestacado(onExplorar = { onNavegar(Rutas.MAPA) })
+    }
+}
+
+// Tarjeta principal para Administrador e Investigador
+@Composable
+private fun TarjetaRol(
+    titulo: String,
+    descripcion: String,
+    icono: ImageVector,
+    textoBoton: String,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = AzulOscuro)
+    ) {
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(titulo, color = Dorado, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(4.dp))
+                Text(descripcion, color = Crema, fontSize = 13.sp)
+                Spacer(Modifier.height(12.dp))
+                Button(
+                    onClick = onClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = Dorado, contentColor = AzulOscuro)
+                ) {
+                    Text(textoBoton)
+                }
+            }
+            Spacer(Modifier.width(12.dp))
+            Icon(icono, null, tint = Dorado, modifier = Modifier.size(56.dp))
+        }
+    }
+}
+
+@Composable
+private fun Encabezado(nombre: String, rol: Rol, onNotificaciones: () -> Unit) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,7 +224,12 @@ private fun Encabezado(nombre: String, onNotificaciones: () -> Unit) {
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text("¡Hola, $nombre!", color = Blanco, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                Text("Sigamos explorando el patrimonio de Iberoamérica", color = Crema, fontSize = 14.sp)
+                Text(
+                    text = if (rol == Rol.CLIENTE) "Sigamos explorando el patrimonio de Iberoamérica"
+                    else "Sesión como ${rol.titulo}",
+                    color = Crema,
+                    fontSize = 14.sp
+                )
             }
             IconButton(onClick = onNotificaciones) {
                 Icon(Icons.Filled.Notifications, "Notificaciones", tint = Dorado)
