@@ -1,6 +1,6 @@
 # Museo de los Museos
 
-Aplicación móvil Android (MVP académico) para el ramo **DSY1105 Desarrollo de Aplicaciones Móviles** (Duoc UC). Centraliza el catálogo de cursos y productos museológicos, el Mapa de Museos Virtuales de Iberoamérica y el cálculo simulado de envíos.
+Aplicación móvil Android  para  **DSY1105 Desarrollo de Aplicaciones Móviles** Centraliza el catálogo de cursos y productos museológicos, el Mapa de Museos Virtuales de Iberoamérica y el cálculo simulado de envíos.
 
 > **Datos ficticios:** por normativa (Leyes N.º 21.719 y N.º 19.628) la app solo usa datos simulados o sintéticos. Nunca ingreses RUT, correos ni direcciones reales.
 
