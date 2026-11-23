@@ -140,6 +140,18 @@ fun CotizadorScreen(
         }
     }
 
+    // ---- Diálogo de error: el backend no pudo registrar el pedido (el carrito no se pierde) ----
+    estado.error?.let { mensaje ->
+        AlertDialog(
+            onDismissRequest = viewModel::limpiarError,
+            title = { Text("No se pudo enviar la solicitud", fontWeight = FontWeight.Bold) },
+            text = { Text("$mensaje\nTu carrito se mantiene: puedes intentarlo de nuevo.") },
+            confirmButton = {
+                TextButton(onClick = viewModel::limpiarError) { Text("Entendido", color = AzulOscuro) }
+            }
+        )
+    }
+
     // ---- Diálogo: muestra el total final antes de enviar la solicitud ----
     if (estado.mostrarConfirmacion) {
         AlertDialog(

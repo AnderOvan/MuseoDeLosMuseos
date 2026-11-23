@@ -1,5 +1,6 @@
 package com.example.museodelosmuseos.ui.screens
 
+import com.example.museodelosmuseos.ui.components.MensajeErrorRed
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -57,6 +58,13 @@ fun DetalleMuseoScreen(
         when {
             estado.cargando -> Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = AzulOscuro)
+            }
+
+            // Sin conexión con el backend: mensaje + "Reintentar"
+            estado.error != null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {
+                BotonVolver(onVolver)
+                Spacer(Modifier.height(16.dp))
+                MensajeErrorRed(mensaje = estado.error!!, onReintentar = viewModel::cargar)
             }
 
             museo == null -> Column(Modifier.fillMaxSize().padding(padding).padding(24.dp)) {

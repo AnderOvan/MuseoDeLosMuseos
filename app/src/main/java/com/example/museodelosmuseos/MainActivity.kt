@@ -51,6 +51,10 @@ import com.example.museodelosmuseos.ui.components.LocalRol
 import com.example.museodelosmuseos.ui.screens.ObrasScreen
 import com.example.museodelosmuseos.viewmodel.ObrasViewModel
 import com.example.museodelosmuseos.repository.MuseoRepositoryRemoto
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.example.museodelosmuseos.ui.screens.FormularioProductoScreen
+import com.example.museodelosmuseos.viewmodel.FormularioProductoViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -176,9 +180,35 @@ class MainActivity : ComponentActivity() {
                         CatalogoScreen(
                             viewModel = catalogoViewModel,
                             onNavegarADetalle = { id ->
-                                navController.navigate("${Rutas.DETALLE_PRODUCTO}/${TipoContenidoQr.PRODUCTO.name}/$id")
+                                if (rolActual == Rol.ADMINISTRADOR) {
+                                    // El Administrador edita el producto
+                                    navController.navigate("${Rutas.FORMULARIO_PRODUCTO}?id=$id")
+                                } else {
+                                    navController.navigate("${Rutas.DETALLE_PRODUCTO}/${TipoContenidoQr.PRODUCTO.name}/$id")
+                                }
                             },
-                            onNavegar = navegarSeccion
+                            onNavegar = navegarSeccion,
+                            onNuevoProducto = { navController.navigate(Rutas.FORMULARIO_PRODUCTO) }
+                        )
+                    }
+
+                    // ---------- Formulario CRUD de productos (solo Administrador) ----------
+                    // Sin id = producto nuevo; con id = editar ese producto
+                    composable(
+                        route = "${Rutas.FORMULARIO_PRODUCTO}?id={id}",
+                        arguments = listOf(navArgument("id") {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        })
+                    ) { entrada ->
+                        val productoId = entrada.arguments?.getString("id")
+                        val formularioViewModel: FormularioProductoViewModel = viewModel(
+                            factory = FormularioProductoViewModel.factory(productoId, localRepository)
+                        )
+                        FormularioProductoScreen(
+                            viewModel = formularioViewModel,
+                            onVolver = { navController.popBackStack() }
                         )
                     }
 

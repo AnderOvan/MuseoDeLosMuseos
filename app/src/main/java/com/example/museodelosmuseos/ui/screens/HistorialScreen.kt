@@ -1,5 +1,7 @@
 package com.example.museodelosmuseos.ui.screens
 
+import androidx.compose.material.icons.filled.Delete
+import com.example.museodelosmuseos.ui.components.MensajeErrorRed
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
@@ -99,14 +101,27 @@ fun HistorialScreen(
             }
             Spacer(Modifier.height(12.dp))
 
-            if (estado.pedidos.isEmpty()) {
-                HistorialVacio(
+            when {
+                // Consultando al backend
+                estado.isLoading && estado.pedidos.isEmpty() -> Box(
+                    Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = AzulOscuro)
+                }
+
+                // Sin conexión con el backend
+                estado.error != null -> MensajeErrorRed(
+                    mensaje = estado.error!!,
+                    onReintentar = viewModel::cargar
+                )
+
+                estado.pedidos.isEmpty() -> HistorialVacio(
                     hayFiltro = estado.filtro != null,
                     esAdmin = estado.esAdmin,
                     onIrAlCatalogo = onIrAlCatalogo
                 )
-            } else {
-                LazyColumn(
+
+                else -> LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 16.dp)
                 ) {
@@ -114,7 +129,8 @@ fun HistorialScreen(
                         TarjetaPedido(
                             pedido = pedido,
                             esAdmin = estado.esAdmin,
-                            onCambiarEstado = { nuevo -> viewModel.cambiarEstado(pedido, nuevo) }
+                            onCambiarEstado = { nuevo -> viewModel.cambiarEstado(pedido, nuevo) },
+                            onEliminar = { viewModel.eliminar(pedido) }
                         )
                     }
                 }
@@ -142,11 +158,13 @@ private fun ChipEstado(texto: String, seleccionado: Boolean, onClick: () -> Unit
 private fun TarjetaPedido(
     pedido: PedidoEntity,
     esAdmin: Boolean,
-    onCambiarEstado: (EstadoPedido) -> Unit
+    onCambiarEstado: (EstadoPedido) -> Unit,
+    onEliminar: () -> Unit
 ) {
     // El color cambia con una animación cuando el Administrador actualiza el estado
     val color by animateColorAsState(colorDeEstado(pedido.estado), label = "colorEstado")
     var menuAbierto by remember { mutableStateOf(false) }
+    var confirmarEliminar by remember { mutableStateOf(false) }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -231,8 +249,36 @@ private fun TarjetaPedido(
                         }
                     }
                 }
+
+                // Eliminar el pedido en el backend (DELETE /api/pedidos/{id})
+                TextButton(
+                    onClick = { confirmarEliminar = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Eliminar pedido", color = MaterialTheme.colorScheme.error)
+                }
             }
         }
+    }
+
+    // Confirmación antes de borrar (no se puede deshacer)
+    if (confirmarEliminar) {
+        AlertDialog(
+            onDismissRequest = { confirmarEliminar = false },
+            title = { Text("Eliminar pedido ${pedido.numero}", fontWeight = FontWeight.Bold) },
+            text = { Text("Se borrará del servidor. Esta acción no se puede deshacer.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmarEliminar = false
+                    onEliminar()
+                }) { Text("Eliminar", color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmarEliminar = false }) { Text("Cancelar", color = AzulOscuro) }
+            }
+        )
     }
 }
 
