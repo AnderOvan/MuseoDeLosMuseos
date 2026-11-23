@@ -48,6 +48,8 @@ import com.example.museodelosmuseos.repository.local.PreferenciasEntity
 import kotlinx.coroutines.launch
 import com.example.museodelosmuseos.model.Rol
 import com.example.museodelosmuseos.ui.components.LocalRol
+import com.example.museodelosmuseos.ui.screens.ObrasScreen
+import com.example.museodelosmuseos.viewmodel.ObrasViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -296,6 +298,16 @@ class MainActivity : ComponentActivity() {
                             onVolver = { navController.popBackStack() }
                         )
                     }
+                    // ---------- Obras de arte (API externa) ----------
+                    composable(Rutas.OBRAS) {
+                        val obrasViewModel: ObrasViewModel =
+                            viewModel(factory = ObrasViewModel.factory())
+                        ObrasScreen(
+                            viewModel = obrasViewModel,
+                            onVolver = { navController.popBackStack() }
+                        )
+                    }
+
 
                     // ---------- Perfil y configuración ----------
                     composable(Rutas.PERFIL) {
