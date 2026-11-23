@@ -65,7 +65,7 @@ class ObrasViewModel(private val repo: ObrasRepository) : ViewModel() {
 }
 
 // Traduce la excepción a un mensaje entendible para el usuario
-fun mensajeDeError(e: Exception): String = when (e) {
+fun mensajeDeError(e: Throwable): String = when (e) {
     is IOException -> "Sin conexión. Revisa tu internet e inténtalo de nuevo."
     is HttpException -> "El servidor respondió con un error (${e.code()})."
     else -> "Ocurrió un error inesperado al cargar los datos."

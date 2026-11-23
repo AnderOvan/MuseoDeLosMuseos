@@ -6,8 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.museodelosmuseos.repository.CarritoRepository
 import com.example.museodelosmuseos.repository.ItemCarrito
 import com.example.museodelosmuseos.repository.LocalRepository
+import com.example.museodelosmuseos.repository.PedidoRepositoryRemoto
+import com.example.museodelosmuseos.repository.local.PedidoEntity
 import com.example.museodelosmuseos.util.CotizadorEnvios
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +43,8 @@ data class CotizadorUiState(
     val faltaParaGratis: Double = 0.0,      // cuánto falta para envío gratis en Chile
     val mostrarConfirmacion: Boolean = false,
     val procesando: Boolean = false,
-    val pedido: PedidoConfirmado? = null
+    val pedido: PedidoConfirmado? = null,
+    val error: String? = null               // el backend no pudo registrar el pedido
 )
 
 private data class FormularioEnvio(
@@ -53,10 +55,15 @@ private data class FormularioEnvio(
 private data class EstadoPago(
     val mostrarConfirmacion: Boolean = false,
     val procesando: Boolean = false,
-    val pedido: PedidoConfirmado? = null
+    val pedido: PedidoConfirmado? = null,
+    val error: String? = null
 )
 
-class CotizadorViewModel(private val local: LocalRepository) : ViewModel() {
+class CotizadorViewModel(
+    private val local: LocalRepository,
+    // Backend de pedidos: "el backend centraliza el pedido y su estado"
+    private val remoto: PedidoRepositoryRemoto = PedidoRepositoryRemoto()
+) : ViewModel() {
 
     private val _formulario = MutableStateFlow(FormularioEnvio())
     private val _pago = MutableStateFlow(EstadoPago())
@@ -87,7 +94,8 @@ class CotizadorViewModel(private val local: LocalRepository) : ViewModel() {
             faltaParaGratis = falta,
             mostrarConfirmacion = pago.mostrarConfirmacion,
             procesando = pago.procesando,
-            pedido = pago.pedido
+            pedido = pago.pedido,
+            error = pago.error
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CotizadorUiState())
 
@@ -124,40 +132,57 @@ class CotizadorViewModel(private val local: LocalRepository) : ViewModel() {
         _pago.update { it.copy(mostrarConfirmacion = false) }
     }
 
+    // POST /api/pedidos -> si el backend responde bien: copia local + aviso, y se vacía el carrito.
+    // Si falla: el carrito queda intacto y se muestra el error para reintentar.
     fun procesarPago() {
         viewModelScope.launch {
-            _pago.update { it.copy(procesando = true) }
-            delay(1200)
+            _pago.update { it.copy(procesando = true, error = null) }
 
             val state = uiState.value
+            val usuario = local.obtenerUsuarioActivo()
+            if (usuario == null) {
+                _pago.update { it.copy(procesando = false, error = "Inicia sesión para enviar la solicitud.") }
+                return@launch
+            }
+
             val numPedido = "PED-${(1000..9999).random()}"
             val resumen = state.items.joinToString(", ") { "${it.cantidad}x ${it.producto.titulo}" }
+            val tipoEnvio = "${state.tipoEnvio.titulo} (${state.plazo})"
 
-            local.registrarPedido(
+            val nuevo = PedidoEntity(
+                usuarioId = usuario.id,
+                clienteNombre = usuario.nombre,
                 numero = numPedido,
                 resumen = resumen,
                 total = state.total,
                 destino = state.pais,
-                tipoEnvio = "${state.tipoEnvio.titulo} (${state.plazo})"
+                tipoEnvio = tipoEnvio
             )
 
-            val pedidoConfirmado = PedidoConfirmado(
-                numero = numPedido,
-                total = state.total,
-                pais = state.pais,
-                tipoEnvio = state.tipoEnvio,
-                plazo = state.plazo
-            )
-
-            CarritoRepository.vaciar()
-
-            _pago.value = EstadoPago(
-                mostrarConfirmacion = false,
-                procesando = false,
-                pedido = pedidoConfirmado
-            )
+            remoto.crear(nuevo)
+                .onSuccess {
+                    // Historial local de consulta (SQLite) + notificación al cliente
+                    local.registrarPedido(numPedido, resumen, state.total, state.pais, tipoEnvio)
+                    CarritoRepository.vaciar()
+                    _pago.value = EstadoPago(
+                        pedido = PedidoConfirmado(
+                            numero = numPedido,
+                            total = state.total,
+                            pais = state.pais,
+                            tipoEnvio = state.tipoEnvio,
+                            plazo = state.plazo
+                        )
+                    )
+                }
+                .onFailure { e ->
+                    _pago.update {
+                        it.copy(procesando = false, mostrarConfirmacion = false, error = mensajeDeError(e))
+                    }
+                }
         }
     }
+
+    fun limpiarError() = _pago.update { it.copy(error = null) }
 
     fun cerrarPedido() {
         _pago.value = EstadoPago()

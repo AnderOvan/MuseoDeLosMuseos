@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.museodelosmuseos.repository.CarritoRepository
 import com.example.museodelosmuseos.repository.FakeProductoRepository
 import com.example.museodelosmuseos.repository.LocalRepository
+import com.example.museodelosmuseos.repository.ProductoRepositoryRemoto
 import com.example.museodelosmuseos.repository.local.ProductoCacheEntity
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,7 +44,9 @@ private data class EstadoCompra(
 
 class DetalleProductoViewModel(
     private val productoId: String,
-    localRepository: LocalRepository
+    localRepository: LocalRepository,
+    // Backend de productos: valida el stock real antes de agregar al carrito
+    private val remoto: ProductoRepositoryRemoto = ProductoRepositoryRemoto(localRepository)
 ) : ViewModel() {
 
     private val _compra = MutableStateFlow(EstadoCompra())
@@ -80,7 +83,7 @@ class DetalleProductoViewModel(
         _compra.update { if (it.cantidad > 1) it.copy(cantidad = it.cantidad - 1) else it }
     }
 
-    // Valida el stock con el "backend" y recién ahí agrega al carrito
+    // Valida el stock con el backend (GET /api/productos/{id}) y recién ahí agrega al carrito
     fun agregarAlCarrito() {
         val estado = uiState.value
         val producto = estado.producto ?: return
@@ -88,10 +91,14 @@ class DetalleProductoViewModel(
 
         viewModelScope.launch {
             _compra.update { it.copy(validando = true, mensaje = null) }
-            val stock = FakeProductoRepository.consultarStock(producto.id)
+            val resultado = remoto.consultarStock(producto.id)
+            val stock = resultado.getOrNull() ?: 0
             val pedido = estado.enCarrito + estado.cantidad
 
             val mensaje = when {
+                // Sin respuesta del servidor no se confirma la compra
+                resultado.isFailure ->
+                    MensajeCompra.Error(mensajeDeError(resultado.exceptionOrNull()!!))
                 estado.esCurso && estado.enCarrito > 0 ->
                     MensajeCompra.Error("Este curso ya está en tu carrito")
                 stock <= 0 ->

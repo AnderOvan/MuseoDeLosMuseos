@@ -3,8 +3,8 @@ package com.example.museodelosmuseos.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.museodelosmuseos.repository.FakeProductoRepository
 import com.example.museodelosmuseos.repository.LocalRepository
+import com.example.museodelosmuseos.repository.ProductoRepositoryRemoto
 import com.example.museodelosmuseos.repository.local.ProductoCacheEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,10 +27,15 @@ data class CatalogoUiState(
     val categoria: CategoriaCatalogo = CategoriaCatalogo.TODOS,
     val productos: List<ProductoCacheEntity> = emptyList(), // ya filtrados
     val total: Int = 0,                                     // artículos en la caché
-    val sincronizando: Boolean = true
+    val sincronizando: Boolean = true,
+    val error: String? = null                               // fallo al sincronizar con el backend
 )
 
-class CatalogoViewModel(private val local: LocalRepository) : ViewModel() {
+class CatalogoViewModel(
+    private val local: LocalRepository,
+    // Backend de productos: descarga el catálogo y lo guarda en la caché de Room
+    private val remoto: ProductoRepositoryRemoto = ProductoRepositoryRemoto(local)
+) : ViewModel() {
 
     // El texto de búsqueda va aparte para que el campo responda al instante al escribir
     private val _query = MutableStateFlow("")
@@ -38,14 +43,16 @@ class CatalogoViewModel(private val local: LocalRepository) : ViewModel() {
 
     private val _categoria = MutableStateFlow(CategoriaCatalogo.TODOS)
     private val _sincronizando = MutableStateFlow(true)
+    private val _error = MutableStateFlow<String?>(null)
 
     // Lee la caché de Room y aplica búsqueda + categoría cada vez que algo cambia
     val uiState: StateFlow<CatalogoUiState> = combine(
         local.observarCatalogo(),
         _query,
         _categoria,
-        _sincronizando
-    ) { todos, query, categoria, sincronizando ->
+        _sincronizando,
+        _error
+    ) { todos, query, categoria, sincronizando, error ->
         val texto = normalizar(query.trim())
         val filtrados = todos.filter { producto ->
             (categoria.valor == null || producto.categoria == categoria.valor) &&
@@ -57,14 +64,22 @@ class CatalogoViewModel(private val local: LocalRepository) : ViewModel() {
             categoria = categoria,
             productos = filtrados,
             total = todos.size,
-            sincronizando = sincronizando && todos.isEmpty()
+            sincronizando = sincronizando && todos.isEmpty(),
+            error = error
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CatalogoUiState())
 
     init {
-        // Precarga el catálogo en la tabla productos_cache (simula la sincronización)
+        sincronizar()
+    }
+
+    // GET /api/productos -> guarda en Room (productos_cache) -> la lista se actualiza sola.
+    // Si falla, se sigue mostrando lo que haya en la caché y aparece el error. También es el botón "Reintentar".
+    fun sincronizar() {
         viewModelScope.launch {
-            FakeProductoRepository.sincronizar(local)
+            _sincronizando.value = true
+            _error.value = null
+            remoto.sincronizar().onFailure { e -> _error.value = mensajeDeError(e) }
             _sincronizando.value = false
         }
     }

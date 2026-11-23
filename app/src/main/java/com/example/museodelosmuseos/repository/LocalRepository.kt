@@ -275,6 +275,18 @@ class LocalRepository(
         )
     }
 
+    // Usuario con sesión iniciada (lectura puntual, para armar el pedido)
+    suspend fun obtenerUsuarioActivo(): UsuarioEntity? =
+        usuarioActivoId.value?.let { db.usuarioDao().obtenerPorId(it) }
+
+    // Aviso al cliente cuando el Administrador cambia el estado en el backend
+    suspend fun avisarCambioEstado(pedido: PedidoEntity, nuevo: EstadoPedido) =
+        crearNotificacion(
+            pedido.usuarioId, TipoNotificacion.PEDIDO,
+            "Pedido ${pedido.numero}: ${nuevo.titulo}",
+            "El estado de tu pedido cambió de ${pedido.estado.titulo} a ${nuevo.titulo}."
+        )
+
     // ---------- Notificaciones (solo del usuario activo) ----------
 
     fun observarNotificaciones(): Flow<List<NotificacionEntity>> =

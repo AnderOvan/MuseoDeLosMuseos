@@ -30,7 +30,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.museodelosmuseos.repository.FakeMuseoRepository
+import com.example.museodelosmuseos.repository.MuseoRepositoryRemoto
 import com.example.museodelosmuseos.ui.components.BarraNavegacion
 import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.theme.AzulOscuro
@@ -86,7 +86,7 @@ fun MapaScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val uriHandler = LocalUriHandler.current
 
-    val factory = remember { MapaViewModel.factory(FakeMuseoRepository()) }
+    val factory = remember { MapaViewModel.factory(MuseoRepositoryRemoto()) }
     val vm: MapaViewModel = viewModel(factory = factory)
     val estado by vm.uiState.collectAsStateWithLifecycle()
 

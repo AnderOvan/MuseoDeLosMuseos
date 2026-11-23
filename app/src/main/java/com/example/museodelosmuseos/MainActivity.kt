@@ -50,7 +50,7 @@ import com.example.museodelosmuseos.model.Rol
 import com.example.museodelosmuseos.ui.components.LocalRol
 import com.example.museodelosmuseos.ui.screens.ObrasScreen
 import com.example.museodelosmuseos.viewmodel.ObrasViewModel
-
+import com.example.museodelosmuseos.repository.MuseoRepositoryRemoto
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -238,7 +238,7 @@ class MainActivity : ComponentActivity() {
                         val codigo = entrada.arguments?.getString("codigo").orEmpty()
                         // Cada museo abierto tiene su propio ViewModel (con su id)
                         val detalleViewModel: DetalleMuseoViewModel = viewModel(
-                            factory = DetalleMuseoViewModel.factory(codigo, FakeMuseoRepository(), localRepository)
+                            factory = DetalleMuseoViewModel.factory(codigo, MuseoRepositoryRemoto(), localRepository)
                         )
                         DetalleMuseoScreen(
                             viewModel = detalleViewModel,
