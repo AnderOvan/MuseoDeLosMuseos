@@ -36,9 +36,11 @@ import com.example.museodelosmuseos.ui.navigation.Rutas
 import com.example.museodelosmuseos.ui.theme.AzulOscuro
 import com.example.museodelosmuseos.ui.theme.Blanco
 import com.example.museodelosmuseos.ui.theme.Dorado
+import com.example.museodelosmuseos.util.GeoUtils
 import com.example.museodelosmuseos.viewmodel.MapaViewModel
 import com.example.museodelosmuseos.viewmodel.MuseoConDistancia
 import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -46,7 +48,6 @@ import org.osmdroid.views.overlay.Marker
 import java.io.File
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.util.MapTileIndex
-import com.example.museodelosmuseos.util.GeoUtils
 // Color de cada categoría (marcadores, recuadro de la tarjeta y etiquetas)
 fun colorCategoria(categoria: String): Color = when (categoria) {
     "Arte" -> Color(0xFFB5523B)

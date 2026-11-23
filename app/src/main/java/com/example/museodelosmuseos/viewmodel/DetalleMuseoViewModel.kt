@@ -6,13 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.museodelosmuseos.model.Museo
 import com.example.museodelosmuseos.repository.LocalRepository
 import com.example.museodelosmuseos.repository.MuseoRepository
+import com.example.museodelosmuseos.util.GeoUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.example.museodelosmuseos.util.GeoUtils
 
 data class DetalleMuseoUiState(
     val cargando: Boolean = true,

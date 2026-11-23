@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -33,11 +34,14 @@ import com.example.museodelosmuseos.util.formatearRut
 import com.example.museodelosmuseos.util.limpiarRut
 import com.example.museodelosmuseos.util.validarRut
 import com.example.museodelosmuseos.util.validarDespacho
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.OffsetMapping
-import androidx.compose.ui.text.input.TransformedText
+import com.example.museodelosmuseos.util.RutVisualTransformation
 
+private val coloresAvatar = listOf(
+    Color(0xFF1B4965),
+    Color(0xFF8A5A44),
+    Color(0xFF5F7A61),
+    Color(0xFF7B5EA7)
+)
 
 @Composable
 fun RegistroScreen(
@@ -91,13 +95,11 @@ fun RegistroScreen(
             text = "Únete a la comunidad de Museo de los Museos",
             color = AzulOscuro.copy(alpha = 0.7f)
         )
-
-        errorExterno?.let {
-            Spacer(Modifier.height(8.dp))
-            Text(it, color = MaterialTheme.colorScheme.error)
-        }
-
         Spacer(Modifier.height(24.dp))
+        errorExterno?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
+            Spacer(Modifier.height(8.dp))
+        }
 
         OutlinedTextField(
             value = nombre,
@@ -211,7 +213,7 @@ fun RegistroScreen(
                     onRegistrar(
                         Usuario(
                             nombre = nombre.trim(),
-                            rut = rut,
+                            rut = formatearRut(rut),
                             correo = correo.trim(),
                             contrasena = contrasena,
                             despacho = despacho,
@@ -242,22 +244,4 @@ fun RegistroScreen(
 @Composable
 fun RegistroPreview() {
     RegistroScreen(onRegistrar = {}, onIrALogin = {}, onVolver = {})
-}
-
-// Muestra el RUT con puntos y guion sin tocar el texto que escribe el usuario
-private class RutVisualTransformation : VisualTransformation {
-    override fun filter(text: AnnotatedString): TransformedText {
-        val formateado = formatearRut(text.text)
-        // posición en el texto formateado de cada carácter real (dígito o K)
-        val posiciones = formateado.indices.filter { formateado[it].isDigit() || formateado[it] == 'K' }
-
-        val mapeo = object : OffsetMapping {
-            override fun originalToTransformed(offset: Int): Int =
-                if (offset <= 0) 0 else posiciones.getOrNull(offset - 1)?.plus(1) ?: formateado.length
-
-            override fun transformedToOriginal(offset: Int): Int =
-                formateado.take(offset).count { it.isDigit() || it == 'K' }
-        }
-        return TransformedText(AnnotatedString(formateado), mapeo)
-    }
 }

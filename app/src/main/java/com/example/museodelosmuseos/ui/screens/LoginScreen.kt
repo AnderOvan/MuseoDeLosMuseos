@@ -26,7 +26,7 @@ import com.example.museodelosmuseos.ui.theme.*
 
 @Composable
 fun LoginScreen(
-    onIniciarSesion: (String, String, Rol) -> Unit,
+    onIniciarSesion: (correo: String, contrasena: String, rol: Rol) -> Unit,
     onRegistro: () -> Unit,
     onVolver: () -> Unit,
     errorExterno: String? = null
@@ -102,7 +102,7 @@ fun LoginScreen(
             modifier = Modifier.fillMaxWidth()
         )
 
-        (error ?:errorExterno)?.let {
+        (error ?: errorExterno)?.let {
             Spacer(Modifier.height(8.dp))
             Text(it, color = MaterialTheme.colorScheme.error)
         }
@@ -181,5 +181,5 @@ private fun RolOpcion(rol: Rol, seleccionado: Boolean, onClick: () -> Unit) {
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-    LoginScreen(onIniciarSesion = {_,_,_ ->}, onRegistro = {}, onVolver = {})
+    LoginScreen(onIniciarSesion = { _, _, _ -> }, onRegistro = {}, onVolver = {})
 }

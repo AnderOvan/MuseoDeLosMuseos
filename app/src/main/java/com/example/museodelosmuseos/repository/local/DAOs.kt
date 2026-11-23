@@ -29,7 +29,17 @@ interface UsuarioDao {
     // Flow: la pantalla se actualiza sola si cambian los datos del usuario
     @Query("SELECT * FROM usuarios WHERE id = :id LIMIT 1")
     fun observarPorId(id: Long): Flow<UsuarioEntity?>
+
+    // Perfil: solo se pueden editar estos tres campos (correo y RUT quedan fijos)
+    @Query("UPDATE usuarios SET nombre = :nombre, despacho = :despacho, avatar = :avatar WHERE id = :id")
+    suspend fun actualizarPerfil(id: Long, nombre: String, despacho: String, avatar: Int)
+
+    // Para que el Administrador pueda enviar un aviso a todos
+    @Query("SELECT id FROM usuarios")
+    suspend fun listarIds(): List<Long>
 }
+
+
 
 @Dao
 interface FavoritoDao {
@@ -80,4 +90,50 @@ interface ProductoCacheDao {
 
     @Query("DELETE FROM productos_cache")
     suspend fun limpiar()
+}
+
+@Dao
+interface PedidoDao {
+    @Insert
+    suspend fun insertar(pedido: PedidoEntity): Long
+
+    // Cliente: solo sus pedidos
+    @Query("SELECT * FROM pedidos WHERE usuarioId = :usuarioId ORDER BY fecha DESC")
+    fun observarPorUsuario(usuarioId: Long): Flow<List<PedidoEntity>>
+
+    // Administrador: todos los pedidos recibidos
+    @Query("SELECT * FROM pedidos ORDER BY fecha DESC")
+    fun observarTodos(): Flow<List<PedidoEntity>>
+
+    // El estado se guarda como texto (PENDIENTE, CONFIRMADO...)
+    @Query("UPDATE pedidos SET estado = :estado WHERE id = :id")
+    suspend fun actualizarEstado(id: Long, estado: String)
+}
+
+@Dao
+interface NotificacionDao {
+    @Insert
+    suspend fun insertar(notificacion: NotificacionEntity): Long
+
+    @Query("SELECT * FROM notificaciones WHERE usuarioId = :usuarioId ORDER BY fecha DESC")
+    fun observarPorUsuario(usuarioId: Long): Flow<List<NotificacionEntity>>
+
+    @Query("UPDATE notificaciones SET leida = 1 WHERE id = :id AND usuarioId = :usuarioId")
+    suspend fun marcarLeida(id: Long, usuarioId: Long)
+
+    @Query("UPDATE notificaciones SET leida = 1 WHERE usuarioId = :usuarioId")
+    suspend fun marcarTodasLeidas(usuarioId: Long)
+}
+
+@Dao
+interface PreferenciasDao {
+    // Upsert: crea la fila la primera vez y la actualiza después
+    @Upsert
+    suspend fun guardar(preferencias: PreferenciasEntity)
+
+    @Query("SELECT * FROM preferencias WHERE usuarioId = :usuarioId LIMIT 1")
+    suspend fun obtener(usuarioId: Long): PreferenciasEntity?
+
+    @Query("SELECT * FROM preferencias WHERE usuarioId = :usuarioId LIMIT 1")
+    fun observar(usuarioId: Long): Flow<PreferenciasEntity?>
 }
