@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import androidx.room.withTransaction
 
 // Resultado de registrarse o iniciar sesión
 sealed interface ResultadoAuth {
@@ -343,6 +344,14 @@ class LocalRepository(
 
     suspend fun guardarCatalogo(productos: List<ProductoCacheEntity>) =
         db.productoCacheDao().guardarTodos(productos)
+
+    // Reemplaza toda la caché con lo que llegó del servidor
+    // (así desaparecen los productos eliminados o desactivados)
+    suspend fun reemplazarCatalogo(productos: List<ProductoCacheEntity>) =
+        db.withTransaction {
+            db.productoCacheDao().limpiar()
+            db.productoCacheDao().guardarTodos(productos)
+        }
 
     fun observarCatalogo(): Flow<List<ProductoCacheEntity>> =
         db.productoCacheDao().observarTodos()
