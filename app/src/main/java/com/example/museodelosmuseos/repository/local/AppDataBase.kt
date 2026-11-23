@@ -1,0 +1,52 @@
+package com.example.museodelosmuseos.repository.local
+
+import android.content.Context
+import androidx.room.Database
+import androidx.room.Room
+import androidx.room.RoomDatabase
+
+
+@Database(
+    entities = [
+        UsuarioEntity::class,
+        FavoritoEntity::class,
+        LecturaQrEntity::class,
+        ProductoCacheEntity::class,
+        PedidoEntity::class,
+        NotificacionEntity::class,
+        PreferenciasEntity::class
+    ],
+    version = 3,
+    exportSchema = false
+)
+abstract class AppDatabase : RoomDatabase() {
+
+    abstract fun usuarioDao(): UsuarioDao
+    abstract fun favoritoDao(): FavoritoDao
+    abstract fun lecturaQrDao(): LecturaQrDao
+    abstract fun productoCacheDao(): ProductoCacheDao
+    abstract fun pedidoDao(): PedidoDao
+    abstract fun notificacionDao(): NotificacionDao
+    abstract fun preferenciasDao(): PreferenciasDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        // Singleton: una sola conexión a la base de datos para toda la app
+        fun getInstance(context: Context): AppDatabase =
+            INSTANCE ?: synchronized(this) {
+                INSTANCE ?: Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "museo_db"
+                )
+                    // Mientras desarrollamos: si cambia una tabla, recrea la base
+                    .fallbackToDestructiveMigration(true)
+                    .build()
+                    .also { INSTANCE = it }
+            }
+    }
+
+
+}
