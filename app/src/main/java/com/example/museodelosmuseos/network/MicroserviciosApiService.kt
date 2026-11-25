@@ -4,6 +4,7 @@ import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
@@ -64,7 +65,7 @@ interface PedidoApiService {
     suspend fun crear(@Body pedido: PedidoDto): PedidoDto
 
     // Solo cambia el estado: { "estado": "ENVIADO" }
-    @PUT("api/pedidos/{id}/estado")
+    @PATCH("api/pedidos/{id}/estado")
     suspend fun cambiarEstado(@Path("id") id: Long, @Body cambio: CambioEstadoDto): PedidoDto
 
     @DELETE("api/pedidos/{id}")
