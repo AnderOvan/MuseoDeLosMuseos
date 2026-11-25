@@ -1,127 +1,179 @@
-# Museo de los Museos
+# Backend – Museo de los Museos
 
-Aplicación móvil Android  para  **DSY1105 Desarrollo de Aplicaciones Móviles** Centraliza el catálogo de cursos y productos museológicos, el Mapa de Museos Virtuales de Iberoamérica y el cálculo simulado de envíos.
+Microservicio REST desarrollado en **Spring Boot** (Java 21, Maven) con base de datos **MySQL**. Es el único microservicio del proyecto y da servicio a la app móvil Android (Kotlin + Jetpack Compose) de **DSY1105 Desarrollo de Aplicaciones Móviles**.
 
-> **Datos ficticios:** por normativa (Leyes N.º 21.719 y N.º 19.628) la app solo usa datos simulados o sintéticos. Nunca ingreses RUT, correos ni direcciones reales.
+> **Datos ficticios:** por normativa (Leyes N.º 21.719 y N.º 19.628) el sistema solo usa datos simulados. No ingreses RUT, correos ni direcciones reales.
+
+## Integrantes
+
+- Anderson Ovando: backend (microservicio) y pantallas de la app
+- Cristobal Pizarro: código base de la app móvil
+
+## Funcionalidades
+
+- Catálogo de **museos** (mapa de museos virtuales) con filtro por categoría.
+- Catálogo de **productos** (cursos, libros y materiales) con filtro por categoría.
+- Registro, consulta y edición de **usuarios**, con contraseña guardada con hash BCrypt.
+- **Login** (`/api/auth/login`).
+- **Pedidos** con número automático (`MDM-00001`), estado y filtro por usuario.
+- **Notificaciones** por usuario, con marcado como leída.
+- Datos iniciales cargados automáticamente al arrancar (12 museos, 10 productos y un administrador).
 
 ## Tecnologías
 
 | Componente | Detalle |
 |---|---|
-| Lenguaje | Kotlin 2.2.10 |
-| Interfaz | Jetpack Compose + Material 3 |
-| Navegación | Navigation Compose |
-| Persistencia | Room (SQLite) con KSP |
-| Arquitectura | MVVM (pantalla → ViewModel → repositorio → Room) |
-| Build | Android Gradle Plugin 9.4.1, minSdk 24 |
+| Lenguaje | Java 21 |
+| Framework | Spring Boot 4.2.0 (Web MVC, Data JPA, Validation) |
+| Base de datos | MySQL (XAMPP) |
+| Seguridad | `spring-security-crypto` (BCrypt) |
+| Pruebas | JUnit 5 y Mockito |
+| Build | Maven (`mvnw` incluido) |
+
+## Requisitos
+
+- JDK 21
+- MySQL en ejecución (con XAMPP: botón **Start** en MySQL)
+- No hace falta instalar Maven: se usa `mvnw`
 
 ## Cómo ejecutar
 
-1. Clona el repositorio y ábrelo con Android Studio.
-2. Espera a que termine el **Gradle Sync**.
-3. Elige un emulador o un celular con depuración USB y presiona **Run** (▶).
+1. Inicia MySQL. La base `museo_db` se crea sola la primera vez.
+2. Si tu usuario `root` tiene contraseña, defínela antes de arrancar (PowerShell):
+   ```powershell
+   $env:DB_PASSWORD="tu_clave"
+   ```
+   Para usar otro usuario de MySQL: `$env:DB_USER="otro_usuario"`.
+3. En la carpeta `backend/`:
+   ```powershell
+   .\mvnw spring-boot:run
+   ```
+4. Comprueba en el navegador: http://localhost:8080/api/museos
 
-## Estructura del proyecto
+Desde el **emulador de Android**, el backend se ve como `http://10.0.2.2:8080/`. Desde un celular físico, usa la IP de tu PC en la red local.
 
-Todo el código está en `app/src/main/java/com/example/museodelosmuseos/`.
+### Datos iniciales
 
-```
-museodelosmuseos/
-├── MainActivity.kt
-├── modelo/
-│   ├── Rol.kt
-│   └── Usuario.kt
-├── repository/
-│   ├── LocalRepository.kt
-│   └── local/
-│       ├── AppDatabase.kt
-│       ├── Cifrado.kt
-│       ├── Daos.kt
-│       ├── EntidadesLocales.kt
-│       └── SessionManager.kt
-├── ui/
-│   ├── navigation/
-│   │   └── Rutas.kt
-│   ├── screens/
-│   │   ├── BienvenidaScreen.kt
-│   │   ├── LoginScreen.kt
-│   │   └── RegistroScreen.kt
-│   └── theme/
-│       ├── MuseoColores.kt
-│       ├── Color.kt
-│       ├── Theme.kt
-│       └── Type.kt
-├── util/
-│   └── Validaciones.kt
-└── viewmodel/
-    └── AuthViewModel.kt
-```
+Al arrancar se agregan los que falten (no duplica si se reinicia):
 
-### Qué contiene cada carpeta
+- 12 museos (`MU01` a `MU12`)
+- 10 productos (`C001`–`C004` cursos, `L001`–`L003` libros, `M001`–`M003` materiales)
+- Un usuario administrador de prueba:
 
-| Carpeta / archivo | Responsabilidad |
+| Correo | Contraseña | Rol |
+|---|---|---|
+| `admin@museo.cl` | `Admin123` | ADMINISTRADOR |
+
+## Endpoints
+
+| Recurso | Métodos |
 |---|---|
-| `MainActivity.kt` | Punto de entrada. Crea el repositorio y el ViewModel y define el `NavHost` con todas las rutas |
-| `modelo/` | Clases que usan las pantallas: `Rol` (enum de roles) y `Usuario` (datos del formulario) |
-| `repository/LocalRepository.kt` | Punto único de acceso a los datos. Aplica las reglas: correo y RUT no repetidos, login, favoritos, historial QR |
-| `repository/local/` | Todo lo relacionado con Room y el almacenamiento local |
-| `repository/local/EntidadesLocales.kt` | Tablas: `usuarios`, `favoritos`, `lecturas_qr` y `productos_cache` |
-| `repository/local/Daos.kt` | Consultas a cada tabla (insertar, buscar, autenticar, observar cambios) |
-| `repository/local/AppDatabase.kt` | Base de datos Room, una sola instancia para toda la app |
-| `repository/local/Cifrado.kt` | Convierte la contraseña en un hash SHA-256 antes de guardarla |
-| `repository/local/SessionManager.kt` | Recuerda qué usuario tiene la sesión iniciada |
-| `ui/navigation/Rutas.kt` | Nombres de las rutas de las 15 pantallas |
-| `ui/screens/` | Una pantalla Compose por archivo |
-| `ui/theme/MuseoColores.kt` | Paleta del museo (azul oscuro, dorado, crema, blanco) |
-| `util/Validaciones.kt` | Validación de nombre, correo, contraseña y RUT (módulo 11), y formato del RUT |
-| `viewmodel/AuthViewModel.kt` | Une las pantallas de login y registro con el repositorio |
+| `/api/museos` (`?categoria=`) | GET, POST |
+| `/api/museos/{id}` | GET, PUT, DELETE |
+| `/api/productos` (`?categoria=`) | GET, POST |
+| `/api/productos/{id}` | GET, PUT, DELETE |
+| `/api/usuarios` | GET, POST |
+| `/api/usuarios/{id}` | GET, PUT, DELETE |
+| `/api/auth/login` | POST |
+| `/api/pedidos` (`?usuarioId=`) | GET, POST |
+| `/api/pedidos/{id}` | GET, PUT, DELETE |
+| `/api/pedidos/{id}/estado` | PATCH |
+| `/api/notificaciones` (`?usuarioId=`) | GET, POST |
+| `/api/notificaciones/{id}` | GET, PUT, DELETE |
+| `/api/notificaciones/{id}/leida` | PATCH |
 
-## Flujo de datos
+### Ejemplos de cuerpo
 
-```
-Pantalla (ui/screens)
-   │  evento: "registrar" / "iniciar sesión"
-   ▼
-ViewModel (viewmodel)
-   │  corrutina
-   ▼
-LocalRepository (repository)
-   │  reglas de negocio
-   ▼
-DAO + Room (repository/local)  →  SQLite (museo_db)
+**Registrar usuario** (`POST /api/usuarios`):
+```json
+{
+  "nombre": "Ana Prueba",
+  "rut": "11111111-1",
+  "correo": "ana@mail.cl",
+  "contrasena": "secreto1",
+  "despacho": "Santiago, Chile"
+}
 ```
 
-Las pantallas nunca tocan Room directamente: solo muestran datos y avisan eventos. Los mensajes de error de la base de datos vuelven a la pantalla a través del ViewModel.
+**Login** (`POST /api/auth/login`):
+```json
+{ "correo": "ana@mail.cl", "contrasena": "secreto1" }
+```
 
-## Reglas de organización
+**Crear pedido** (`POST /api/pedidos`):
+```json
+{
+  "usuarioId": 1,
+  "clienteNombre": "Ana Prueba",
+  "resumen": "1 x Curso de Curaduría Virtual",
+  "total": 49.0,
+  "destino": "Santiago, Chile",
+  "tipoEnvio": "Estándar"
+}
+```
 
-- **Una sola carpeta de modelos:** `modelo/`. No crear `model/`.
-- **Todo lo de Room** (entidades, DAOs, base de datos) vive en `repository/local/`.
-- **Las pantallas** van en `ui/screens/`, con un archivo por pantalla y el sufijo `Screen`.
-- **Colores:** se usan siempre desde `ui/theme/MuseoColores.kt`, no se escriben códigos de color sueltos.
-- **Rutas:** se usan siempre desde `Rutas`, no textos escritos a mano.
-- **Nombres en español** para clases, variables y mensajes, salvo los términos técnicos (`ViewModel`, `Repository`, `DAO`).
-- **Validaciones** en `util/Validaciones.kt`, no dentro de las pantallas, para poder reutilizarlas.
+**Cambiar estado de un pedido** (`PATCH /api/pedidos/{id}/estado`):
+```json
+{ "estado": "ENVIADO" }
+```
+Estados: `PENDIENTE`, `CONFIRMADO`, `ENVIADO`, `ENTREGADO`.
 
-## Roles de la aplicación
+**Crear notificación** (`POST /api/notificaciones`):
+```json
+{
+  "usuarioId": 1,
+  "tipo": "PEDIDO",
+  "titulo": "Pedido confirmado",
+  "mensaje": "Tu pedido MDM-00001 fue confirmado."
+}
+```
+Tipos: `PEDIDO`, `CURSO`, `MUSEO`, `AVISO`.
 
-| Rol | Descripción |
+### Reglas de negocio
+
+- La contraseña **nunca se devuelve** en las respuestas y se guarda con BCrypt.
+- Correo y RUT de usuario son únicos.
+- Todo pedido nace en estado `PENDIENTE` y toda notificación nace sin leer, aunque el cliente envíe otro valor.
+- Pedidos y notificaciones solo se crean para un `usuarioId` que exista.
+- El login responde el mismo mensaje si falla el correo o la contraseña.
+
+## Errores
+
+Todas las respuestas de error tienen la misma forma:
+
+```json
+{ "status": 404, "mensaje": "Usuario 999 no encontrado" }
+```
+
+| Código | Cuándo ocurre |
 |---|---|
-| Administrador | Gestiona productos, cursos, solicitudes y notificaciones (perfil de prueba) |
-| Investigador | Registra y revisa museos virtuales, ubicaciones y enlaces (perfil de prueba) |
-| Cliente | Explora museos y catálogo, guarda favoritos, escanea QR y realiza solicitudes |
+| **400** | Datos inválidos (con `detalles` por campo), JSON mal formado o valor de enum inexistente |
+| **401** | Correo o contraseña incorrectos en el login |
+| **404** | El recurso no existe (museo, producto, usuario, pedido o notificación) |
+| **409** | Dato duplicado (id de museo o producto, correo o RUT de usuario) |
 
-## Distribución de pantallas
+## Pruebas
 
-| Integrante | Pantallas |
-|---|---|
-| Persona A (Anderson) | 1 Bienvenida, 2 Registro, 3 Login, 4 Dashboard, 13 Historial de solicitudes, 14 Notificaciones, 15 Perfil |
-| Persona B | 5 Mapa, 6 Detalle del museo, 7 Escáner QR, 8 Resultado QR, 9 Catálogo, 10 Detalle de producto, 11 Favoritos, 12 Carrito y envío |
+```powershell
+.\mvnw test
+```
 
-## Trabajo con Git
+Las pruebas unitarias usan **Mockito**: simulan el repositorio y el encriptador, así que **no necesitan MySQL**. `UsuarioServiceTest` cubre correo y RUT duplicados, contraseña guardada con hash, usuario inexistente y login correcto o fallido.
 
-- Cada integrante trabaja en su propia rama y no escribe directamente en `main`.
-- **Antes de empezar a trabajar:** `Git → Pull`.
-- Commits pequeños, con mensajes que describan el cambio (por ejemplo: `Agrega campo RUT con validación al registro`).
-- Si se mueven o renombran archivos, avisar al otro integrante antes de subir los cambios, para evitar conflictos.
-- No subir `build/`, `.gradle/` ni `local.properties`.
+Las pruebas de los endpoints se hicieron con Postman (colección en `backend/postman/`).
+
+## Estructura
+
+```
+src/main/java/com/museodelosmuseos/museo_backend/
+├── MuseoBackendApplication.java
+├── config/        SeguridadConfig (BCrypt), DataLoader (datos iniciales)
+├── controller/    Museo, Producto, Usuario, Auth, Pedido, Notificacion
+├── dto/           UsuarioRequest, UsuarioResponse, LoginRequest, EstadoPedidoRequest
+├── exception/     excepciones propias y GlobalExceptionHandler
+├── model/         entidades JPA y enums (Rol, EstadoPedido, TipoNotificacion)
+├── repository/    interfaces JpaRepository
+└── service/       lógica de negocio
+```
+
+Flujo: `Controller → Service → Repository → MySQL`. Los controllers solo reciben y responden, las reglas viven en los services y los errores se convierten en JSON en `GlobalExceptionHandler`.
