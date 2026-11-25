@@ -81,16 +81,21 @@ public class DataLoader implements CommandLineRunner {
     }
 
     private void cargarAdministrador() {
-        if (usuarios.existsByCorreo("admin@museo.cl")) {
+        crearSiNoExiste("Administrador", "99999999-9", "admin@museo.cl", "Admin123", Rol.ADMINISTRADOR);
+        crearSiNoExiste("Investigadora Museo", "88888888-8", "investigador@museo.cl", "Invest123", Rol.INVESTIGADOR);
+    }
+
+    private void crearSiNoExiste(String nombre, String rut, String correo, String clave, Rol rol) {
+        if (usuarios.existsByCorreo(correo)) {
             return;
         }
-        UsuarioModel admin = new UsuarioModel();
-        admin.setNombre("Administrador");
-        admin.setRut("99999999-9");
-        admin.setCorreo("admin@museo.cl");
-        admin.setClave(encoder.encode("Admin123"));
-        admin.setDespacho("Santiago, Chile");
-        admin.setRol(Rol.ADMINISTRADOR);
-        usuarios.save(admin);
+        UsuarioModel u = new UsuarioModel();
+        u.setNombre(nombre);
+        u.setRut(rut);
+        u.setCorreo(correo);
+        u.setClave(encoder.encode(clave));
+        u.setDespacho("Santiago, Chile");
+        u.setRol(rol);
+        usuarios.save(u);
     }
 }
