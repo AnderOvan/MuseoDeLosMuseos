@@ -1,5 +1,6 @@
 package com.example.museodelosmuseos.network
 
+
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -15,9 +16,11 @@ object RetrofitInstance {
     // API externa (internet, HTTPS)
     private const val URL_API_ARTE = "https://api.artic.edu/api/v1/"
 
-    // Backend propio (Spring Boot, HTTP local): un proyecto con 3 controladores en el puerto 8080.
+    // Backend propio (Spring Boot, HTTP local, puerto 8080).
+    // Emulador: el PC se ve como "10.0.2.2" (se detecta solo).
     // Celular físico: "localhost" funciona gracias a "adb reverse tcp:8080 tcp:8080".
-    // Emulador: cambiar "localhost" por "10.0.2.2".
+    // Backend propio (Spring Boot, HTTP local, puerto 8080).
+    // Emulador y celular físico: "localhost" funciona gracias a "adb reverse tcp:8080 tcp:8080".
     private const val URL_BACKEND = "http://localhost:8080/"
 
     // ---------- Cliente HTTP compartido ----------

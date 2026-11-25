@@ -160,13 +160,15 @@ class CotizadorViewModel(
             )
 
             remoto.crear(nuevo)
-                .onSuccess {
+                .onSuccess { creado ->
+                    // El número oficial lo asigna el backend (MDM-xxxxx); numPedido es solo un respaldo
+                    val numeroOficial = creado.numero.ifBlank { numPedido }
                     // Historial local de consulta (SQLite) + notificación al cliente
-                    local.registrarPedido(numPedido, resumen, state.total, state.pais, tipoEnvio)
+                    local.registrarPedido(numeroOficial, resumen, state.total, state.pais, tipoEnvio)
                     CarritoRepository.vaciar()
                     _pago.value = EstadoPago(
                         pedido = PedidoConfirmado(
-                            numero = numPedido,
+                            numero = numeroOficial,
                             total = state.total,
                             pais = state.pais,
                             tipoEnvio = state.tipoEnvio,

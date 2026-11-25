@@ -9,17 +9,14 @@ import com.museodelosmuseos.museo_backend.exception.RecursoNoEncontradoException
 import com.museodelosmuseos.museo_backend.model.EstadoPedido;
 import com.museodelosmuseos.museo_backend.model.PedidoModel;
 import com.museodelosmuseos.museo_backend.repository.PedidoRepository;
-import com.museodelosmuseos.museo_backend.repository.UsuarioRepository;
 
 @Service
 public class PedidoService {
 
     private final PedidoRepository repository;
-    private final UsuarioRepository usuarios;
 
-    public PedidoService(PedidoRepository repository, UsuarioRepository usuarios) {
+    public PedidoService(PedidoRepository repository) {
         this.repository = repository;
-        this.usuarios = usuarios;
     }
 
     public List<PedidoModel> listar(Long usuarioId) {
@@ -36,7 +33,6 @@ public class PedidoService {
 
     @Transactional
     public PedidoModel crear(PedidoModel nuevo) {
-        verificarUsuario(nuevo.getUsuarioId());
         nuevo.setId(null);                              // el id lo genera la base
         nuevo.setFecha(System.currentTimeMillis());
         nuevo.setEstado(EstadoPedido.PENDIENTE);        // todo pedido nace PENDIENTE
@@ -47,7 +43,6 @@ public class PedidoService {
 
     public PedidoModel actualizar(Long id, PedidoModel datos) {
         PedidoModel existente = obtener(id);            // 404 si no existe
-        verificarUsuario(datos.getUsuarioId());         // 404 si el usuario no existe
         existente.setUsuarioId(datos.getUsuarioId());
         existente.setClienteNombre(datos.getClienteNombre());
         existente.setResumen(datos.getResumen());
@@ -68,11 +63,5 @@ public class PedidoService {
 
     public void eliminar(Long id) {
         repository.delete(obtener(id));
-    }
-
-    private void verificarUsuario(Long usuarioId) {
-        if (!usuarios.existsById(usuarioId)) {
-            throw new RecursoNoEncontradoException("Usuario " + usuarioId + " no encontrado");
-        }
     }
 }

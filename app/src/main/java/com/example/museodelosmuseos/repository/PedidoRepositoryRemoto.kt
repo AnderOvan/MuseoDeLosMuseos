@@ -23,7 +23,7 @@ class PedidoRepositoryRemoto(
     suspend fun crear(pedido: PedidoEntity): Result<PedidoEntity> =
         llamadaSegura { api.crear(pedido.aDto()).aEntity() }
 
-    // PUT /api/pedidos/{id}/estado  { "estado": "ENVIADO" }
+    // PATCH /api/pedidos/{id}/estado  { "estado": "ENVIADO" }
     suspend fun cambiarEstado(id: Long, nuevo: EstadoPedido): Result<PedidoEntity> =
         llamadaSegura { api.cambiarEstado(id, CambioEstadoDto(nuevo.name)).aEntity() }
 

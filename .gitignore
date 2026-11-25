@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Archivos que no deben subirse
+.idea/
+HELP.md
+malo.json
+museo.json
+roto.json
