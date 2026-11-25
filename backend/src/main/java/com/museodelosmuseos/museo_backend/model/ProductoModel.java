@@ -106,4 +106,9 @@ public class ProductoModel {
         this.stock = stock;
     }
 
+    private boolean activo = true;   // false = desactivado por el Administrador
+
+    public boolean isActivo() { return activo; }
+    public void setActivo(boolean activo) { this.activo = activo; }
+
 }
