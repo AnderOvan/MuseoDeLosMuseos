@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import androidx.room.withTransaction
 
 // Resultado de registrarse o iniciar sesión
 sealed interface ResultadoAuth {
@@ -274,6 +275,18 @@ class LocalRepository(
         )
     }
 
+    // Usuario con sesión iniciada (lectura puntual, para armar el pedido)
+    suspend fun obtenerUsuarioActivo(): UsuarioEntity? =
+        usuarioActivoId.value?.let { db.usuarioDao().obtenerPorId(it) }
+
+    // Aviso al cliente cuando el Administrador cambia el estado en el backend
+    suspend fun avisarCambioEstado(pedido: PedidoEntity, nuevo: EstadoPedido) =
+        crearNotificacion(
+            pedido.usuarioId, TipoNotificacion.PEDIDO,
+            "Pedido ${pedido.numero}: ${nuevo.titulo}",
+            "El estado de tu pedido cambió de ${pedido.estado.titulo} a ${nuevo.titulo}."
+        )
+
     // ---------- Notificaciones (solo del usuario activo) ----------
 
     fun observarNotificaciones(): Flow<List<NotificacionEntity>> =
@@ -343,6 +356,14 @@ class LocalRepository(
 
     suspend fun guardarCatalogo(productos: List<ProductoCacheEntity>) =
         db.productoCacheDao().guardarTodos(productos)
+
+    // Reemplaza toda la caché con lo que llegó del servidor
+    // (así desaparecen los productos eliminados o desactivados)
+    suspend fun reemplazarCatalogo(productos: List<ProductoCacheEntity>) =
+        db.withTransaction {
+            db.productoCacheDao().limpiar()
+            db.productoCacheDao().guardarTodos(productos)
+        }
 
     fun observarCatalogo(): Flow<List<ProductoCacheEntity>> =
         db.productoCacheDao().observarTodos()

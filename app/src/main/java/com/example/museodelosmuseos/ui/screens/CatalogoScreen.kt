@@ -1,5 +1,9 @@
 package com.example.museodelosmuseos.ui.screens
 
+import com.example.museodelosmuseos.ui.components.MensajeErrorRed
+import com.example.museodelosmuseos.ui.components.LocalRol
+import com.example.museodelosmuseos.model.Rol
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -67,14 +71,29 @@ private fun disponibilidad(producto: ProductoCacheEntity): Pair<String, Color> =
 fun CatalogoScreen(
     viewModel: CatalogoViewModel,
     onNavegarADetalle: (String) -> Unit, // recibe el id del producto
-    onNavegar: (String) -> Unit          // barra inferior
+    onNavegar: (String) -> Unit,         // barra inferior
+    onNuevoProducto: () -> Unit = {}     // solo Administrador: abre el formulario vacío
 ) {
     val estado by viewModel.uiState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
 
+    val esAdmin = LocalRol.current == Rol.ADMINISTRADOR
+
     Scaffold(
         containerColor = Crema,
-        bottomBar = { BarraNavegacion(rutaActual = Rutas.CATALOGO, onNavegar = onNavegar) }
+        bottomBar = { BarraNavegacion(rutaActual = Rutas.CATALOGO, onNavegar = onNavegar) },
+        // Botón "+" para crear productos (POST /api/productos), solo para el Administrador
+        floatingActionButton = {
+            if (esAdmin) {
+                ExtendedFloatingActionButton(
+                    onClick = onNuevoProducto,
+                    containerColor = Dorado,
+                    contentColor = AzulOscuro,
+                    icon = { Icon(Icons.Filled.Add, null) },
+                    text = { Text("Nuevo producto") }
+                )
+            }
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -146,6 +165,12 @@ fun CatalogoScreen(
             }
 
             Spacer(Modifier.height(10.dp))
+
+            // Si falló la sincronización se avisa, pero se sigue mostrando la caché de Room
+            estado.error?.let { mensaje ->
+                MensajeErrorRed(mensaje = mensaje, onReintentar = viewModel::sincronizar)
+                Spacer(Modifier.height(10.dp))
+            }
 
             when {
                 estado.sincronizando -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

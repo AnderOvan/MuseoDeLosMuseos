@@ -52,6 +52,7 @@ private val ROL_INVESTIGADOR = setOf(Rol.INVESTIGADOR)
 
 private val ACCESOS_RAPIDOS = listOf(
     Acceso("Mapa", Icons.Filled.Map, Rutas.MAPA),
+    Acceso("Obras", Icons.Filled.Palette, Rutas.OBRAS),
     Acceso("Catálogo", Icons.AutoMirrored.Filled.MenuBook, Rutas.CATALOGO, ROL_CLIENTE + ROL_ADMIN),
     Acceso("Escáner QR", Icons.Filled.QrCodeScanner, Rutas.ESCANER_QR, ROL_CLIENTE + ROL_INVESTIGADOR),
     Acceso("Favoritos", Icons.Filled.Favorite, Rutas.FAVORITOS, ROL_CLIENTE),

@@ -19,7 +19,8 @@ data class DetalleMuseoUiState(
     val museo: Museo? = null,
     val distanciaKm: Double = 0.0,
     val esFavorito: Boolean = false, // viene de la tabla "favoritos" de Room
-    val haySesion: Boolean = false
+    val haySesion: Boolean = false,
+    val error: String? = null        // fallo de conexión con el backend
 )
 
 class DetalleMuseoViewModel(
@@ -30,30 +31,39 @@ class DetalleMuseoViewModel(
 
     private val _museo = MutableStateFlow<Museo?>(null)
     private val _cargando = MutableStateFlow(true)
+    private val _error = MutableStateFlow<String?>(null)
 
     // Junta los datos del museo con los favoritos del usuario activo.
     // Si se agrega o quita el favorito en Room, la pantalla se actualiza sola.
     val uiState: StateFlow<DetalleMuseoUiState> = combine(
         _museo,
         _cargando,
+        _error,
         localRepository.observarFavoritos(),
         localRepository.usuarioActivoId
-    ) { museo, cargando, favoritos, usuarioId ->
+    ) { museo, cargando, error, favoritos, usuarioId ->
         DetalleMuseoUiState(
             cargando = cargando,
             museo = museo,
             distanciaKm = museo?.let { GeoUtils.distanciaDesdeOrigenKm(it.latitud, it.longitud) } ?: 0.0,
             esFavorito = favoritos.any { it.museoId == museoId },
-            haySesion = usuarioId != null
+            haySesion = usuarioId != null,
+            error = error
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DetalleMuseoUiState())
 
     init {
-        // Busca el museo en la API (ficticia)
+        cargar()
+    }
+
+    // Busca el museo en el backend (GET /api/museos). También lo usa el botón "Reintentar".
+    fun cargar() {
         viewModelScope.launch {
-            museoRepository.obtenerMuseos().onSuccess { lista ->
-                _museo.value = lista.find { it.id == museoId }
-            }
+            _cargando.value = true
+            _error.value = null
+            museoRepository.obtenerMuseos()
+                .onSuccess { lista -> _museo.value = lista.find { it.id == museoId } }
+                .onFailure { e -> _error.value = mensajeDeError(e) }
             _cargando.value = false
         }
     }

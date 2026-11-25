@@ -21,6 +21,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Permite generar el informe de cobertura de las pruebas unitarias
+            enableUnitTestCoverage = true
+        }
         release {
             optimization {
                 enable = true
@@ -35,6 +39,10 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        // Si una prueba llama a algo de Android (como Log), devuelve un valor por defecto en vez de fallar
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -48,9 +56,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.navigation:navigation-compose:2.8.5")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.converter.gson)
-    implementation(libs.okhttp.logging)
 
     // Room (SQLite) y ViewModel para Compose
     implementation(libs.androidx.room.runtime)
@@ -76,4 +81,17 @@ dependencies {
 
     // Mapa OpenStreetMap
     implementation(libs.osmdroid)
+
+    // Red: consumo de API externa y microservicios (Retrofit)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp.logging)
+
+    // Imágenes desde internet (obras de la API externa)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.network)
+
+    // Pruebas unitarias: MockK simula el servidor y coroutines-test controla las corrutinas
+    testImplementation(libs.mockk)
+    testImplementation(libs.coroutines.test)
 }

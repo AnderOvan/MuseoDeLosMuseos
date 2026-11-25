@@ -67,7 +67,7 @@ class MapaViewModel(private val repo: MuseoRepository) : ViewModel() {
                 }
                 .onFailure { e ->
                     _uiState.update {
-                        it.copy(cargando = false, error = "No se pudieron cargar los museos: ${e.message}")
+                        it.copy(cargando = false, error = mensajeDeError(e))
                     }
                 }
         }

@@ -16,4 +16,7 @@ object Rutas {
     const val HISTORIAL = "historial"
     const val NOTIFICACIONES = "notificaciones"
     const val PERFIL = "perfil"
+    const val OBRAS = "obras"
+
+    const val FORMULARIO_PRODUCTO = "formulario_producto"
 }
