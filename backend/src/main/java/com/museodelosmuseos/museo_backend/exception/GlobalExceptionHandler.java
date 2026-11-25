@@ -3,6 +3,7 @@ package com.museodelosmuseos.museo_backend.exception;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -33,6 +34,11 @@ public class GlobalExceptionHandler {
         return respuesta(HttpStatus.CONFLICT, e.getMessage(), null);
     }
 
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    public ResponseEntity<Map<String, Object>> credenciales(CredencialesInvalidasException e) {
+        return respuesta(HttpStatus.UNAUTHORIZED, e.getMessage(), null);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> validacion(MethodArgumentNotValidException e) {
         Map<String, String> errores = new LinkedHashMap<>();
@@ -41,8 +47,13 @@ public class GlobalExceptionHandler {
         return respuesta(HttpStatus.BAD_REQUEST, "Datos inválidos", errores);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, Object>> jsonIncorrecto(HttpMessageNotReadableException e) {
+    @ExceptionHandler({HttpMessageNotReadableException.class, IllegalArgumentException.class})
+    public ResponseEntity<Map<String, Object>> peticionIncorrecta(Exception e) {
         return respuesta(HttpStatus.BAD_REQUEST, "Petición incorrecta: revisa el JSON enviado", null);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, Object>> integridad(DataIntegrityViolationException e) {
+        return respuesta(HttpStatus.CONFLICT, "Dato duplicado o inválido (por ejemplo, correo o RUT ya registrado)", null);
     }
 }

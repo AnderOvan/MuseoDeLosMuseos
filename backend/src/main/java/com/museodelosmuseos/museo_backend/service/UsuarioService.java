@@ -1,3 +1,20 @@
+package com.museodelosmuseos.museo_backend.service;
+
+import java.util.List;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import com.museodelosmuseos.museo_backend.dto.LoginRequest;
+import com.museodelosmuseos.museo_backend.dto.UsuarioRequest;
+import com.museodelosmuseos.museo_backend.dto.UsuarioResponse;
+import com.museodelosmuseos.museo_backend.exception.ConflictoException;
+import com.museodelosmuseos.museo_backend.exception.CredencialesInvalidasException;
+import com.museodelosmuseos.museo_backend.exception.RecursoNoEncontradoException;
+import com.museodelosmuseos.museo_backend.model.Rol;
+import com.museodelosmuseos.museo_backend.model.UsuarioModel;
+import com.museodelosmuseos.museo_backend.repository.UsuarioRepository;
+
 @Service
 public class UsuarioService {
 
@@ -13,36 +30,45 @@ public class UsuarioService {
         return repository.findAll().stream().map(this::aRespuesta).toList();
     }
 
-    public UsuarioResponse obtener(Long id) { return aRespuesta(buscar(id)); }
+    public UsuarioResponse obtener(Long id) {
+        return aRespuesta(buscar(id));
+    }
 
     public UsuarioResponse crear(UsuarioRequest req) {
-        if (req.contrasena() == null || req.contrasena().isBlank())
-            throw new IllegalArgumentException("La contraseña es obligatoria");   // 400
-        if (repository.existsByCorreo(req.correo()))
-            throw new ConflictoException("El correo ya está registrado");          // 409
-        if (repository.existsByRut(req.rut()))
-            throw new ConflictoException("El RUT ya está registrado");             // 409
+        if (req.contrasena() == null || req.contrasena().isBlank()) {
+            throw new IllegalArgumentException("La contraseña es obligatoria");
+        }
+        if (repository.existsByCorreo(req.correo())) {
+            throw new ConflictoException("El correo ya está registrado");
+        }
+        if (repository.existsByRut(req.rut())) {
+            throw new ConflictoException("El RUT ya está registrado");
+        }
         UsuarioModel u = new UsuarioModel();
         copiarDatos(u, req);
-        u.setClave(encoder.encode(req.contrasena()));   // se guarda el HASH
+        u.setClave(encoder.encode(req.contrasena()));
         return aRespuesta(repository.save(u));
     }
 
     public UsuarioResponse actualizar(Long id, UsuarioRequest req) {
-        UsuarioModel u = buscar(id);                     // 404 si no existe
+        UsuarioModel u = buscar(id);
         copiarDatos(u, req);
-        if (req.contrasena() != null && !req.contrasena().isBlank())
+        if (req.contrasena() != null && !req.contrasena().isBlank()) {
             u.setClave(encoder.encode(req.contrasena()));
+        }
         return aRespuesta(repository.save(u));
     }
 
-    public void eliminar(Long id) { repository.delete(buscar(id)); }
+    public void eliminar(Long id) {
+        repository.delete(buscar(id));
+    }
 
     public UsuarioResponse login(LoginRequest req) {
         UsuarioModel u = repository.findByCorreo(req.correo())
                 .orElseThrow(() -> new CredencialesInvalidasException("Correo o contraseña incorrectos"));
-        if (!encoder.matches(req.contrasena(), u.getClave()))
+        if (!encoder.matches(req.contrasena(), u.getClave())) {
             throw new CredencialesInvalidasException("Correo o contraseña incorrectos");
+        }
         return aRespuesta(u);
     }
 
