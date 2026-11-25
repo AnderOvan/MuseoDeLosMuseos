@@ -54,7 +54,23 @@ public class MuseoModel {
 
     public MuseoModel() {}
 
-    // Aquí van los getters y setters de los 12 atributos
+    public MuseoModel(String id, String nombre, String ciudad, String pais,
+                      double latitud, double longitud, String descripcion,
+                      String categoria, String proyecto, String urlVisitaVirtual,
+                      double valoracion, int resenas) {
+        this.id = id;
+        this.nombre = nombre;
+        this.ciudad = ciudad;
+        this.pais = pais;
+        this.latitud = latitud;
+        this.longitud = longitud;
+        this.descripcion = descripcion;
+        this.categoria = categoria;
+        this.proyecto = proyecto;
+        this.urlVisitaVirtual = urlVisitaVirtual;
+        this.valoracion = valoracion;
+        this.resenas = resenas;
+    }
 
     public String getId() {
         return id;

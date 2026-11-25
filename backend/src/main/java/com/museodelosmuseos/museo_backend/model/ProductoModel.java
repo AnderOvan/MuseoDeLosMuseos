@@ -39,6 +39,17 @@ public class ProductoModel {
 
     public ProductoModel() {}
 
+    public ProductoModel(String id, String titulo, String descripcion, double precio,
+                         String imagenUrl, String categoria, int stock) {
+        this.id = id;
+        this.titulo = titulo;
+        this.descripcion = descripcion;
+        this.precio = precio;
+        this.imagenUrl = imagenUrl;
+        this.categoria = categoria;
+        this.stock = stock;
+    }
+
     public String getId() {
         return id;
     }
@@ -60,39 +71,4 @@ public class ProductoModel {
     }
 
     public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public double getPrecio() {
-        return precio;
-    }
-
-    public void setPrecio(double precio) {
-        this.precio = precio;
-    }
-
-    public String getImagenUrl() {
-        return imagenUrl;
-    }
-
-    public void setImagenUrl(String imagenUrl) {
-        this.imagenUrl = imagenUrl;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public int getStock() {
-        return stock;
-    }
-
-    public void setStock(int stock) {
-        this.stock = stock;
-    }
-
-}
+        this.descripcion =
