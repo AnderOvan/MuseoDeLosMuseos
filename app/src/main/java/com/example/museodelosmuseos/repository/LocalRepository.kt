@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import androidx.room.withTransaction
 
+import com.example.museodelosmuseos.network.UsuarioRespuestaDto
+
 // Resultado de registrarse o iniciar sesión
 sealed interface ResultadoAuth {
     data class Exito(val usuario: UsuarioEntity) : ResultadoAuth
@@ -113,6 +115,37 @@ class LocalRepository(
 
         sesion.iniciarSesion(usuario.id)
         return ResultadoAuth.Exito(usuario)
+    }
+
+    // Guarda (o actualiza) en Room el usuario que validó el backend e inicia la sesión local
+    suspend fun guardarUsuarioDelBackend(remoto: UsuarioRespuestaDto, clave: String): ResultadoAuth {
+        val dao = db.usuarioDao()
+        val correo = remoto.correo.trim().lowercase()
+        val rol = Rol.entries.find { it.name == remoto.rol } ?: Rol.CLIENTE
+        val existente = dao.buscarPorCorreo(correo) ?: dao.buscarPorRut(remoto.rut)
+
+        val datos = UsuarioEntity(
+            id = existente?.id ?: 0,
+            nombre = remoto.nombre,
+            rut = remoto.rut,
+            correo = correo,
+            claveHash = Cifrado.sha256(clave),
+            despacho = remoto.despacho ?: "",
+            rol = rol,
+            avatar = remoto.avatar,
+            fechaRegistro = existente?.fechaRegistro ?: remoto.fechaRegistro
+        )
+
+        val id = if (existente == null) {
+            val nuevoId = dao.insertar(datos)
+            crearNotificacionesDeBienvenida(nuevoId, rol)
+            nuevoId
+        } else {
+            dao.actualizar(datos)
+            existente.id
+        }
+        sesion.iniciarSesion(id)
+        return ResultadoAuth.Exito(datos.copy(id = id))
     }
 
     fun cerrarSesion() = sesion.cerrarSesion()

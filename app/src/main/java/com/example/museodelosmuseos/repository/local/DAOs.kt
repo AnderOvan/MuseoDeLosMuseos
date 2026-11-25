@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
@@ -33,6 +34,10 @@ interface UsuarioDao {
     // Perfil: solo se pueden editar estos tres campos (correo y RUT quedan fijos)
     @Query("UPDATE usuarios SET nombre = :nombre, despacho = :despacho, avatar = :avatar WHERE id = :id")
     suspend fun actualizarPerfil(id: Long, nombre: String, despacho: String, avatar: Int)
+
+    // Actualiza el usuario completo con los datos que manda el backend
+    @Update
+    suspend fun actualizar(usuario: UsuarioEntity)
 
     // Para que el Administrador pueda enviar un aviso a todos
     @Query("SELECT id FROM usuarios")

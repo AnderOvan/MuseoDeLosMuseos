@@ -72,4 +72,8 @@ object RetrofitInstance {
     val pedidoApi: PedidoApiService by lazy {
         backend.create(PedidoApiService::class.java)
     }
+
+    val usuarioApi: UsuarioApiService by lazy {
+        backend.create(UsuarioApiService::class.java)
+    }
 }
